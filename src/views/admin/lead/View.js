@@ -207,8 +207,8 @@ const View = ({param,reFreshData}) => {
                 >
                   <Tab>Information</Tab>
                   <Tab>Notes</Tab>
-                  <Tab> Communication</Tab>
-                  <Tab>Document</Tab>
+                  {/* <Tab> Communication</Tab>
+                  <Tab>Document</Tab> */}
                 </TabList>
               </GridItem>
               <GridItem
@@ -402,7 +402,7 @@ const View = ({param,reFreshData}) => {
                           </Text>
                           <Text>{moment(data?.createdDate).format("L")}</Text>
                         </GridItem>
-                        <GridItem colSpan={{ base: 12, md: 6 }}>
+                        {/* <GridItem colSpan={{ base: 12, md: 6 }}>
                           <Text
                             color={"blackAlpha.900"}
                             fontSize="sm"
@@ -414,8 +414,8 @@ const View = ({param,reFreshData}) => {
                           <Text>
                             {moment(data?.leadConversionDate).format("L")}
                           </Text>
-                        </GridItem>
-                        <GridItem colSpan={{ base: 12, md: 6 }}>
+                        </GridItem> */}
+                        {/* <GridItem colSpan={{ base: 12, md: 6 }}>
                           <Text
                             color={"blackAlpha.900"}
                             fontSize="sm"
@@ -427,7 +427,7 @@ const View = ({param,reFreshData}) => {
                           <Text>
                             {moment(data?.leadFollowUpDate).format("L")}
                           </Text>
-                        </GridItem>
+                        </GridItem> */}
                       </Grid>
                     </Card>
                   </GridItem>
@@ -664,7 +664,7 @@ const View = ({param,reFreshData}) => {
                           </Text>
                         </GridItem>
                       
-                        <GridItem colSpan={{ base: 12 }}>
+                        {/* <GridItem colSpan={{ base: 12 }}>
                           <Text
                             color={"blackAlpha.900"}
                             fontSize="sm"
@@ -679,7 +679,7 @@ const View = ({param,reFreshData}) => {
                               ? data?.leadCommunicationPreferences
                               : "N/A"}
                           </Text>
-                        </GridItem>
+                        </GridItem> */}
                       </Grid>
                     </Card>
                   </GridItem>
