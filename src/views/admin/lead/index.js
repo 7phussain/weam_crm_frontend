@@ -128,7 +128,7 @@ const Index = () => {
         const parts = lead?.ip.split('-');
          
     // Return only the IP part, which is the first element of the array
-      lead.ip = parts?.length>1?parts[0]:"";
+      lead.ip = parts?.length>1?parts[1]:parts[0];
       
        }
        return {...lead}
@@ -166,7 +166,7 @@ const Index = () => {
        const parts = lead?.ip.split('-');
         
    // Return only the IP part, which is the first element of the array
-     lead.ip = parts?.length>0?parts[0]:"";
+     lead.ip = parts?.length>0?parts[1]:parts[0];
       }
      return {...lead}
 
@@ -205,7 +205,7 @@ const Index = () => {
        const parts = lead?.ip.split('-');
         
    // Return only the IP part, which is the first element of the array
-     lead.ip = parts?.length>0?parts[0]:"";
+     lead.ip = parts?.length>0?parts[1]:parts[0];
       }
      return {...lead}
 

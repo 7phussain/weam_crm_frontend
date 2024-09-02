@@ -56,12 +56,12 @@ const Edit = (props) => {
         createBy: JSON.parse(localStorage.getItem('user'))._id
     })
     const param = useParams()
-
+    console.log(props?.leadData,"fields of form")
     const formik = useFormik({
         initialValues: initialValues,
         enableReinitialize: true,
-        // validationSchema: leadSchema,
-        validationSchema: yup.object().shape(generateValidationSchema(props?.leadData?.fields)),
+        validationSchema: leadSchema,
+        // validationSchema: yup.object().shape(generateValidationSchema(props?.leadData?.fields)),
         onSubmit: (values, { resetForm }) => {
             EditData();
         },
