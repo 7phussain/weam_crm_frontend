@@ -206,9 +206,9 @@ const View = ({param,reFreshData}) => {
                   }}
                 >
                   <Tab>Information</Tab>
+                  <Tab>Notes</Tab>
                   <Tab> Communication</Tab>
                   <Tab>Document</Tab>
-                  <Tab>Notes</Tab>
                 </TabList>
               </GridItem>
               <GridItem
@@ -789,6 +789,34 @@ const View = ({param,reFreshData}) => {
               </TabPanel>
               <TabPanel pt={4} p={0}>
                 <GridItem colSpan={{ base: 4 }}>
+                  <Card minH={"50vh"}>
+                    <Flex
+                      py={3}
+                      justifyContent={"space-between"}
+                      alignItems={"center"}
+                    >
+                      <Heading flex={2} size="md">
+                        Lead Notes/Comments
+                      </Heading>
+                       
+                       <Flex flex={1} justifyContent={"flex-end"} alignItems={"center"}>
+                       
+                        <Button color="white" onClick={() => setNewNoteModal(true)} style={{
+                          padding: "0 20px", 
+                          color: "white",
+                        }} leftIcon={<FaPlus />} size="sm" variant="brand">
+                          Add New Note
+                        </Button>
+                      </Flex>
+                    </Flex>
+                    <HSeparator />
+                     
+                    <LeadNotes noteAdded={noteAdded} lid={param.id} />
+                  </Card>
+                </GridItem>
+              </TabPanel>
+              <TabPanel pt={4} p={0}>
+                <GridItem colSpan={{ base: 4 }}>
                   <Grid
                     overflow={"hidden"}
                     templateColumns={{ base: "1fr" }}
@@ -1053,34 +1081,7 @@ const View = ({param,reFreshData}) => {
                   </Card>
                 </GridItem>
               </TabPanel>
-              <TabPanel pt={4} p={0}>
-                <GridItem colSpan={{ base: 4 }}>
-                  <Card minH={"50vh"}>
-                    <Flex
-                      py={3}
-                      justifyContent={"space-between"}
-                      alignItems={"center"}
-                    >
-                      <Heading flex={2} size="md">
-                        Lead Notes/Comments
-                      </Heading>
-                       
-                       <Flex flex={1} justifyContent={"flex-end"} alignItems={"center"}>
-                       
-                        <Button color="white" onClick={() => setNewNoteModal(true)} style={{
-                          padding: "0 20px", 
-                          color: "white",
-                        }} leftIcon={<FaPlus />} size="sm" variant="brand">
-                          Add New Note
-                        </Button>
-                      </Flex>
-                    </Flex>
-                    <HSeparator />
-                     
-                    <LeadNotes noteAdded={noteAdded} lid={param.id} />
-                  </Card>
-                </GridItem>
-              </TabPanel>
+              
             </TabPanels>
           </Tabs>
           {(user.role === "superAdmin" ||

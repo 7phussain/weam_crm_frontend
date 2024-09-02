@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Box, Grid, GridItem, Text, VStack, useColorModeValue } from "@chakra-ui/react";
 import Spinner from "components/spinner/Spinner";
@@ -6,16 +7,23 @@ import { toast } from "react-toastify";
 import DataNotFound from "components/notFoundData";
 
 const LeadNotes = ({ lid, noteAdded }) => {
+  const user = JSON.parse(localStorage.getItem("user"));
   const [notesLoading, setNotesLoading] = useState(true);
   const [allNotes, setAllNotes] = useState([]);
 
   const textColor = useColorModeValue("gray.500", "white");
 
   const fetchLeadNotes = async (lid) => {
+    console.log(lid, "Checking the Idssssss")
     try {
       setNotesLoading(true);
       const leadNotes = await getApi("api/leadnote/" + lid);
-      setAllNotes(leadNotes.data || []);
+
+      // Filter the notes to only include those added by the current user
+      const filteredNotes = (leadNotes.data || []).filter(note => note.addedBy?._id === user?._id);
+      
+      // Set the filtered notes to state
+      setAllNotes(filteredNotes);
       setNotesLoading(false);
     } catch (err) {
       console.log(err);
@@ -60,7 +68,7 @@ const LeadNotes = ({ lid, noteAdded }) => {
               gap={4}
               mb={2}
             >
-              {allNotes.map((note) => {
+              {allNotes.map((note,id) => {
                 return (
                   <GridItem colSpan={{ base: 12, md: 6, lg: 6 }}>
                     <Box
