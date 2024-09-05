@@ -12,7 +12,7 @@ import {
 // icon
 import React from "react";
 import { AiFillFolderOpen, AiOutlineMail } from "react-icons/ai";
-import { FaCalendarAlt, FaFile, FaHistory, FaRupeeSign, FaTasks, FaWpforms, FaUserCircle } from "react-icons/fa";
+import { FaCalendarAlt, FaFile, FaHistory, FaRupeeSign, FaTasks, FaWpforms, FaUserCircle,FaDollarSign  } from "react-icons/fa";
 import { LuBuilding2 } from "react-icons/lu";
 import { PiPhoneCallBold } from "react-icons/pi";
 import { FaCreativeCommonsBy } from "react-icons/fa";
@@ -74,6 +74,7 @@ const SignInCentered = React.lazy(() => import("views/auth/signIn"));
 const AdminSetting = React.lazy(() => import("views/admin/adminSetting"));
 const LeadPool = React.lazy(() => import("views/admin/leadpool"));
 const HRModule = React.lazy(() => import("views/admin/hrModule"));
+const CurrencyPoints = React.lazy(() => import("views/admin/currencypoints"));
 
 const routes = [
   // ========================== Dashboard ==========================
@@ -106,6 +107,13 @@ const routes = [
     path: "/pool",
     icon: <Icon as={MdPeopleOutline} width='20px' height='20px' color='inherit' />,
     component: LeadPool,
+  },
+  {
+    name: "Points",
+    layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
+    path: "/points",
+    icon: <Icon as={FaDollarSign } width='20px' height='20px' color='inherit' />,
+    component: CurrencyPoints,
   },
  
   {

@@ -24,7 +24,7 @@ import {
   MdLock,
   MdPeopleOutline
 } from "react-icons/md";
-import { FaUserCircle} from "react-icons/fa";
+import { FaUserCircle, FaDollarSign} from "react-icons/fa";
 import Spinner from "components/spinner/Spinner";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchImage } from "../../redux/imageSlice";
@@ -37,7 +37,7 @@ const SignInCentered = React.lazy(() => import("views/auth/signIn"));
 const UserPage = React.lazy(() => import("views/admin/users"));
 const LeadPool = React.lazy(() => import("views/admin/leadpool"));
 const HRModule = React.lazy(() => import("views/admin/hrModule"));
-
+const CurrencyPoints = React.lazy(() => import("views/admin/currencypoints"));
 // Custom Chakra theme
 export default function User(props) {
   const { ...rest } = props;
@@ -113,6 +113,13 @@ export default function User(props) {
       path: "/sign-in",
       icon: <Icon as={MdLock} width="20px" height="20px" color="inherit" />,
       component: SignInCentered,
+    },
+    {
+      name: "Points",
+      layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
+      path: "/points",
+      icon: <Icon as={FaDollarSign } width='20px' height='20px' color='inherit' />,
+      component: CurrencyPoints,
     },
   ];
 

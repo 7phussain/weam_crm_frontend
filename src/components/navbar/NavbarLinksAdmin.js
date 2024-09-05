@@ -17,15 +17,15 @@ import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 // Assets
 import { MdNotificationsNone } from "react-icons/md";
-import { FaEthereum } from "react-icons/fa";
+import { FaEthereum  } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useColorMode } from "@chakra-ui/react";
 import { getApi } from "services/api";
 import { toast } from "react-toastify";
 import jwtDecode from "jwt-decode";
 import { useSelector } from "react-redux";
-import { MoonIcon, SunIcon } from "@chakra-ui/icons";
-
+import { MoonIcon, SunIcon, BellIcon, TimeIcon } from "@chakra-ui/icons";
+import { Box } from '@chakra-ui/react';
 export default function HeaderLinks(props) {
   const { secondary, setOpenSidebar, openSidebar, routes } = props;
   // Chakra Color Mode
@@ -224,8 +224,31 @@ export default function HeaderLinks(props) {
       </Menu> */}
       {/* <FixedPlugin /> */}
       {/* <ThemeEditor navbarIcon={navbarIcon} /> */}
-
-      <Menu style={{ zIndex: 1500 }}>
+      <Box 
+      boxSize={10} 
+      bg="brand.500"
+      pb={2} 
+      pt={1} 
+      pl={2} 
+      pr={2}
+      mx={1} 
+      sx={{ clipPath: 'circle()' }} // Applying circular clip path
+    >
+      <BellIcon boxSize={6} color="white" />
+    </Box>
+      <Box 
+      boxSize={10} 
+      bg="brand.500"
+      pb={1} 
+      pt={1.5} 
+      pl={2} 
+      pr={2} 
+      mx={1}
+      sx={{ clipPath: 'circle()' }} // Applying circular clip path
+    >
+      <TimeIcon  boxSize={6} color="white" />
+    </Box>
+        <Menu style={{ zIndex: 1500 }}>
         <MenuButton p="0px">
           <Avatar
             _hover={{ cursor: "pointer" }}
@@ -235,8 +258,10 @@ export default function HeaderLinks(props) {
             size="sm"
             w="40px"
             h="40px"
+            mx={1}
           />
         </MenuButton>
+        
         <MenuList
           boxShadow={shadow}
           p="0px"
