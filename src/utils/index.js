@@ -1,4 +1,6 @@
 import * as yup from 'yup'
+import { useSelector } from "react-redux";
+
 
 // export const generateValidationSchema = (fields) => {
 //     return fields.reduce((acc, field) => {
@@ -127,3 +129,27 @@ export const generateValidationSchema = (fields) => {
 
     }, {})
 };
+
+export   const getUserNameById = (id,tree) =>{
+    // const tree = useSelector((state) => state.user.tree);
+
+//     const manager =  tree?.managers?.find(manager=>{
+//           return manager?._id == id  ;  
+//   });
+
+const user = tree?.find(user=>user?._id == id);
+
+  return user?user?.firstName + " " + user?.lastName:""
+
+  }
+//   export   const getAgentNameById = (id,tree) =>{
+// //   const tree = useSelector((state) => state.user.tree);
+
+// //   const agentsArray = Object.values(tree.agents).flatMap(managerArray => managerArray);
+//   const agent = tree.find(agent=>agent?._id?.toString() === id)
+
+//   console.log(tree,id,"agent name")
+
+//   return agent?agent?.firstName + " " +agent?.lastName:"";
+
+//   }

@@ -18,30 +18,38 @@ import { constant } from "constant";
 const Index = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const role = user?.roles[0]?.roleName;
-  const tableColumns = [
+  const [tableColumns,setTableColumns] = useState([
     { Header: "Username", accessor: "userName", width: 20 },
     { Header: "Email", accessor: "managerAssigned" },
     { Header: "Role", accessor: "role" },
-    { Header: "Request Status", accessor: "requestStatus" },
+    { Header: "Total Coins", accessor: "coins" },
     { Header: "Request Notes", accessor: "requestNotes" },
+    { Header: "Coins Approval", accessor: "" },
     
-  ]
-  const tableColumnsManager = [
-    { Header: "Username", accessor: "userName", width: 20 },
-    { Header: "Email", accessor: "managerAssigned" },
-    { Header: "Role", accessor: "role" },
-    { Header: "Total Points", accessor: "leadStatus" },
-    { Header: "Request for the points", accessor: "leadWhatsappNumber" },
+
+  ])
+  const [tableColumnsManager,setTableColumnsManager] = useState([
+    // { Header: "Username", accessor: "username", width: 20 },
+    // { Header: "Email", accessor: "managerAssigned" },
+    // { Header: "Role", accessor: "role" },
+    // { Header: "Total Points", accessor: "leadStatus" },
+    // { Header: "Request for the points", accessor: "leadWhatsappNumber" },
+    {Header:"Request Date",accessor:"createdAt"},
     { Header: "Request Notes", accessor: "requestNotes" },
-  ]
-  const  tableColumnsAgent =  [
-    { Header: "Username", accessor: "userName", width: 20 },
-    { Header: "Email", accessor: "managerAssigned" },
-    { Header: "Role", accessor: "role" },
-    { Header: "Total Points", accessor: "leadStatus" },
-    { Header: "Request for the points", accessor: "leadWhatsappNumber" },
+    { Header: "Status", accessor: "requestStatus" },
+
+  ]);
+  const [ tableColumnsAgent, setTableColumnsAgent] = useState( [
+    // { Header: "Username", accessor: "username", width: 20 },
+    // { Header: "Email", accessor: "managerAssigned" },
+    // { Header: "Role", accessor: "role" },
+    // { Header: "Total Points", accessor: "leadStatus" },
+    // { Header: "Request for the points", accessor: "leadWhatsappNumber" },
+    {Header:"Request Date",accessor:"createdAt"},
     { Header: "Request Notes", accessor: "requestNotes" },
-  ]
+    { Header: "Status", accessor: "requestStatus" },
+
+  ]);
   const roleColumns = {
     Manager: tableColumnsManager,
     Agent: tableColumnsAgent,
@@ -54,8 +62,9 @@ const Index = () => {
   const [totalLeads, setTotalLeads] = useState(0); 
   const [pages, setPages] = useState(0); 
   const [approvals,setApprovals] = useState([]);
-  const [filteredLeads,setFilteredLeads] = useState([]);
-  const [currentState, setCurrentState]=useState("all_leads")
+
+
+  const [currentState, setCurrentState]=useState("all_requests")
   const tree = useSelector((state) => state.user.tree);
   
   const [dynamicColumns, setDynamicColumns] = useState(
@@ -80,95 +89,52 @@ const Index = () => {
  
   
 
-  async function fetchApprovals(){
-    try {
-    //  const res = await getApi("api/adminApproval/get","")
-     const res = await axios.get(constant["baseUrl"]+"api/adminApproval/get",{
-      headers:{
-        Authorization:  (localStorage.getItem("token") || sessionStorage.getItem("token"))
-      }
-     })
-     setApprovals(res?.data)
-    } catch (error) {
-     console.log(error,"error")
-    }
-   }
-  useEffect(()=>{
-    
 
-     fetchApprovals();
-   },[data])
 
    useEffect(()=>{
 
-    if(currentState=="Accepted"){
-      // setTableColumnsManager([
-      //   { Header: "#", accessor: "intID", isSortable: false, width: 10 },
-      //   { Header: "Name", accessor: "leadName", width: 20 },
-      //   { Header: "Manager", accessor: "managerAssigned" },
-      //   { Header: "Agent", accessor: "agentAssigned" },
-      //   { Header: "Status", accessor: "leadStatus" },
-      //   { Header: "Whatsapp Number", accessor: "leadWhatsappNumber" },
-      //   { Header: "Phone Number", accessor: "leadPhoneNumber" },
-      //   { Header: "Date And Time", accessor: "createdDate" },
-      //   { Header: "Timetocall", accessor: "timetocall" },
-      //   { Header: "Nationality", accessor: "nationality" },
-      //   { Header: "Action", isSortable: false, center: true },
-      // ])
-      // setTableColumnsAgent([
-      //   { Header: "#", accessor: "intID", isSortable: false, width: 10 },
-      //   { Header: "Name", accessor: "leadName", width: 20 },
-      //   { Header: "Manager", accessor: "managerAssigned" },
-      //   { Header: "Agent", accessor: "agentAssigned" },
-      //   { Header: "Status", accessor: "leadStatus" },
-      //   { Header: "Whatsapp Number", accessor: "leadWhatsappNumber" },
-      //   { Header: "Phone Number", accessor: "leadPhoneNumber" },
-      //   { Header: "Date And Time", accessor: "createdDate" },
-      //   { Header: "Timetocall", accessor: "timetocall" },
-      //   { Header: "Nationality", accessor: "nationality" },
-      //   { Header: "Action", isSortable: false, center: true },
-      // ])
-    }else{
+    // if(currentState=="Accepted"){
     //   setTableColumnsManager([
-    //     { Header: "#", accessor: "_id", isSortable: false, width: 10 },
-    // { Header: "Name", accessor: "leadName", width: 20 },
-    // { Header: "Manager", accessor: "managerAssigned" },
-    // { Header: "Agent", accessor: "agentAssigned" },
-    // { Header: "Status", accessor: "leadStatus" },
-    // { Header: "Approval Status", accessor: "leadWhatsappNumber" },
-    // { Header: "Intrest", accessor: "interest" },
-    // { Header: "Nationality", accessor: "nationality" },
-    // { Header: "Action", isSortable: false, center: true },
+    //     { Header: "Username", accessor: "userName", width: 20 },
+    //     { Header: "Email", accessor: "managerAssigned" },
+    //     { Header: "Role", accessor: "role" },
+    //     { Header: "Total Points", accessor: "leadStatus" },
+    //     { Header: "Request for the points", accessor: "leadWhatsappNumber" },
+    //     { Header: "Request Notes", accessor: "requestNotes" },
+    
     //   ])
     //   setTableColumnsAgent([
-    //     { Header: "#", accessor: "_id", isSortable: false, width: 10 },
-    // { Header: "Name", accessor: "leadName", width: 20 },
-    // { Header: "Manager", accessor: "managerAssigned" },
-    // { Header: "Agent", accessor: "agentAssigned" },
-    // { Header: "Status", accessor: "leadStatus" },
-    // { Header: "Approval Status", accessor: "leadWhatsappNumber" },
-    // { Header: "Intrest", accessor: "interest" },
-    // { Header: "Nationality", accessor: "nationality" },
-    // { Header: "Action", isSortable: false, center: true },
+    //     { Header: "Username", accessor: "userName", width: 20 },
+    //     { Header: "Email", accessor: "managerAssigned" },
+    //     { Header: "Role", accessor: "role" },
+    //     { Header: "Total Points", accessor: "leadStatus" },
+    //     { Header: "Request for the points", accessor: "leadWhatsappNumber" },
+    //     { Header: "Request Notes", accessor: "requestNotes" },
+    
     //   ])
-    }
+    // }else{
+    //   setTableColumnsManager([
+    //     { Header: "Username", accessor: "userName", width: 20 },
+    //     { Header: "Email", accessor: "managerAssigned" },
+    //     { Header: "Role", accessor: "role" },
+    //     { Header: "Total Points", accessor: "leadStatus" },
+    //     { Header: "Request for the points", accessor: "leadWhatsappNumber" },
+    //     { Header: "Request Notes", accessor: "requestNotes" },
+    
+    //   ])
+    //   setTableColumnsAgent([
+    //     { Header: "Username", accessor: "userName", width: 20 },
+    //     { Header: "Email", accessor: "managerAssigned" },
+    //     { Header: "Role", accessor: "role" },
+    //     { Header: "Total Points", accessor: "leadStatus" },
+    //     { Header: "Request for the points", accessor: "leadWhatsappNumber" },
+    //     { Header: "Request Notes", accessor: "requestNotes" },
+    
+    //   ])
+    // }
+fetchData();
 
-    if(currentState == "all_leads"){
-      setFilteredLeads(data)
-
-      return;
-    }
-   const newFilteredLeads = data?.filter((row)=>{
-      return approvals.find(approval=>approval.leadId == row?._id)
-      
-   })
-   console.log(newFilteredLeads , "Requested Lead")
-   const leadApprovals = newFilteredLeads?.filter((lead)=>{
-    const approval = approvals.find(approval=>lead?._id == approval?.leadId)
-    return approval?.approvalStatus == currentState && (approval.managerId == user._id || approval.agentId == user._id)
- })
-   setFilteredLeads(leadApprovals);
-   },[data,approvals,currentState])
+   },[currentState])
 
  
 
@@ -184,17 +150,29 @@ useEffect(()=>{
 
   const fetchData = async (pageNo = 1, pageSize = 10) => {
     setIsLoding(true);
-    let result = await getApi(
-      true
-        ? "api/lead/" + "?dateTime=" + dateTime?.from + "|" + dateTime?.to + "&page=" + pageNo + "&pageSize=" + 200
-        : `api/lead/?user=${user._id}&role=${
-            user.roles[0]?.roleName
-          }&dateTime=${dateTime?.from + "|" + dateTime?.to}&page=${pageNo}&pageSize=${pageSize}`
-    );
-    console.log(result?.data,"table data")
-    setData(result.data?.result || []);
-    setPages(result.data?.totalPages || 0); 
-    setTotalLeads(result.data?.totalLeads || 0); 
+    try {
+      //  const res = await getApi("api/adminApproval/get","")
+       const result = await axios.get(constant["baseUrl"]+"api/coinsRequest/get",{
+        headers:{
+          Authorization:  (localStorage.getItem("token") || sessionStorage.getItem("token"))
+        },
+        params:{
+          requestStatus:currentState==="all_requests"?"":currentState,
+          page:pageNo,
+          pageSize,
+          userId:user?.role !== "superAdmin"?user?._id:""
+        }
+  
+       })
+      //  setApprovals()
+      // console.log(result.data?.approvals,"approvals")
+       setData(result.data?.requests || []); 
+       setPages(result.data?.totalPages || 0); 
+       setTotalLeads(result.data?.totalRequests || 0); 
+       setIsLoding(false);
+      } catch (error) {
+       console.log(error,"error")
+      }
     setIsLoding(false);
   };
   const fetchSearchedData = async (term="",pageNo = 1, pageSize = 10) => {
@@ -212,23 +190,23 @@ useEffect(()=>{
     setTotalLeads(result.data?.totalLeads || 0); 
     setIsLoding(false);
   };
-  const autoAssign = async () => {
-    try {
-      setAutoAssignLoading(true);
-      let agents = [];
+  // const autoAssign = async () => {
+  //   try {
+  //     setAutoAssignLoading(true);
+  //     let agents = [];
 
-      if (tree && tree["managers"]) {
-        agents = tree["agents"]["manager-" + user?._id?.toString()];
-      }
-      await postApi("api/user/autoAssign", { agents });
-      setAutoAssignLoading(false);
-      toast.success("Auto assignment of agents done!");
-      fetchData();
-    } catch (error) {
-      console.log(error);
-      toast.error("Something went wrong!");
-    }
-  };
+  //     if (tree && tree["managers"]) {
+  //       agents = tree["agents"]["manager-" + user?._id?.toString()];
+  //     }
+  //     await postApi("api/user/autoAssign", { agents });
+  //     setAutoAssignLoading(false);
+  //     toast.success("Auto assignment of agents done!");
+  //     fetchData();
+  //   } catch (error) {
+  //     console.log(error);
+  //     toast.error("Something went wrong!");
+  //   }
+  // };
   const checkApproval = (id) =>{
     // console.log("Approval Id", id)
     // console.log("Approvalsss...", approvals)
@@ -243,15 +221,33 @@ useEffect(()=>{
     setColumns(tableColumns);
   }, [action]);
 console.log(dynamicColumns,"manager")
+
+async function makeRequest(){
+     try{
+         const res = await axios.post(`${constant["baseUrl"]}api/coinsRequest/add`,{
+          userId:user?._id,
+          note:""
+         },{
+          headers:{
+            Authorization:  (localStorage.getItem("token") || sessionStorage.getItem("token"))
+          },
+          
+         })
+
+         fetchData();
+     }catch(error){
+       console.log(error,"error")
+     }
+}
   return (
     <div>
-      <Button  onClick={()=> setCurrentState("all_leads") } sx={{
-        backgroundColor:currentState == "all_leads"&&"#B79045",
-        color:currentState == "all_leads"&&"white",
+      <Button  onClick={()=> setCurrentState("all_requests") } sx={{
+        backgroundColor:currentState == "all_requests"&&"#B79045",
+        color:currentState == "all_requests"&&"white",
         "_hover":{
-        backgroundColor:currentState == "all_leads"&&"#B79045",
+        backgroundColor:currentState == "all_requests"&&"#B79045",
         }
-      }}>All Leads</Button>
+      }}>All Requests</Button>
       <Button  onClick={()=> setCurrentState("pending") } 
         sx={{
           backgroundColor:currentState == "pending"&&"#B79045",
@@ -260,14 +256,14 @@ console.log(dynamicColumns,"manager")
         backgroundColor:currentState == "pending"&&"#B79045",
         }
         }}>Pending</Button>
-          <Button onClick={()=> setCurrentState("Accepted")} 
+          <Button onClick={()=> setCurrentState("Approved")} 
             sx={{
-              backgroundColor:currentState == "Accepted"&&"#B79045",
-        color:currentState == "Accepted"&&"white",
+              backgroundColor:currentState == "Approved"&&"#B79045",
+        color:currentState == "Approved"&&"white",
         "_hover":{
-        backgroundColor:currentState == "Accepted"&&"#B79045",
+        backgroundColor:currentState == "Approved"&&"#B79045",
         }
-            }}>Approved  Leads</Button>
+            }}>Approved  Requests</Button>
           <Button onClick={()=> setCurrentState("Rejected")}
             sx={{
               backgroundColor:currentState == "Rejected"&&"#B79045",
@@ -275,59 +271,17 @@ console.log(dynamicColumns,"manager")
         "_hover":{
         backgroundColor:currentState == "Rejected"&&"#B79045",
         }
-            }}>Rejected Leads</Button>
+            }}>Rejected Requests</Button>
       <Grid templateColumns="repeat(6, 1fr)" mb={3} gap={4}>
       
         <GridItem colSpan={6}>
-        {/* {role === "Manager" && 
-            <Flex justifyContent={"flex-end"} mb={4}>
-              <Button
-                onClick={autoAssign}
-                bg={"black"}
-                disabled={autoAssignLoading}
-                rounded={"full"}
-                colorScheme={"white"}
-              >
-                {autoAssignLoading ? "Assigning.." : "Auto Assign"}
-              </Button>
-            </Flex>
-        } */}
-          {/* <CheckTable
-            dateTime={dateTime}
-            setDateTime={setDateTime}
-            isLoding={isLoding}
-            setIsLoding={setIsLoding}
-            columnsData={roleColumns[role] || tableColumns}
-            // columnsData={[]}
-            isOpen={isOpen}
-            setAction={setAction}
-            // This one fetches the whole data 
-            dataColumn={dataColumn}
-            // dataColumn={[]}
-            action={action}
-            setSearchedData={setSearchedData}
-            allData={displaySearchData ? searchedData : data}
-            //  allData={[]}
-            setData={setData}
-            displaySearchData={displaySearchData}
-             tableData={displaySearchData ? searchedData : data}
-            // tableData= {[]}
-            fetchData={fetchData}
-            setDisplaySearchData={setDisplaySearchData}
-            setDynamicColumns={setDynamicColumns}
-            dynamicColumns={dynamicColumns}
-            selectedColumns={selectedColumns}
-            access={permission}
-            setSelectedColumns={setSelectedColumns}
-            emailAccess={emailAccess}
-            callAccess={callAccess}
-          /> */}
+
           
           <CheckTable
            checkApproval = {checkApproval}
             dateTime={dateTime}
             setDateTime={setDateTime}
-            totalLeads={filteredLeads?.length}
+            totalLeads={data?.length}
             isLoding={isLoding}
             setIsLoding={setIsLoding}
             pages={pages}
@@ -338,10 +292,10 @@ console.log(dynamicColumns,"manager")
             action={action}
             fetchSearchedData={fetchSearchedData}
             setSearchedData={setSearchedData}
-            allData={displaySearchData ? searchedData : filteredLeads}
-            setData={setFilteredLeads}
+            allData={displaySearchData ? searchedData : data}
+            setData={setData}
             displaySearchData={displaySearchData}
-            tableData={displaySearchData ? searchedData : filteredLeads}
+            tableData={displaySearchData ? searchedData : data}
             fetchData={fetchData}
             setDisplaySearchData={setDisplaySearchData}
             setDynamicColumns={setDynamicColumns}
@@ -351,6 +305,7 @@ console.log(dynamicColumns,"manager")
             setSelectedColumns={setSelectedColumns}
             emailAccess={emailAccess}
             callAccess={callAccess}
+            makeRequest={makeRequest}
           />
         </GridItem>
       </Grid>

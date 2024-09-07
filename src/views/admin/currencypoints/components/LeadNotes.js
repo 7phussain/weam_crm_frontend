@@ -5,42 +5,35 @@ import { getApi } from "services/api";
 import { toast } from "react-toastify";
 import DataNotFound from "components/notFoundData";
 
-const LeadNotes = ({ lid, noteAdded }) => {
-  const [notesLoading, setNotesLoading] = useState(true);
-  const [allNotes, setAllNotes] = useState([]);
+const LeadNotes = ({ notes}) => {
+  // const [notesLoading, setNotesLoading] = useState(false);
+  const [allNotes, setAllNotes] = useState(notes);
+
+  useEffect(()=>{setAllNotes(notes)},[notes])
 
   const textColor = useColorModeValue("gray.500", "white");
 
-  const fetchLeadNotes = async (lid) => {
-    try {
-      setNotesLoading(true);
-      const leadNotes = await getApi("api/leadnote/" + lid);
-      setAllNotes(leadNotes.data || []);
-      setNotesLoading(false);
-    } catch (err) {
-      console.log(err);
-      toast.error("Couldn't fetch lead notes");
-    }
-  };
+  // const fetchLeadNotes = async (lid) => {
+  //   try {
+  //     setNotesLoading(true);
+  //     const leadNotes = await getApi("api/leadnote/" + lid);
+  //     setAllNotes(leadNotes.data || []);
+  //     setNotesLoading(false);
+  //   } catch (err) {
+  //     console.log(err);
+  //     toast.error("Couldn't fetch lead notes");
+  //   }
+  // };
 
-  useEffect(() => {
-    if (lid) {
-      fetchLeadNotes(lid);
-    }
-  }, [noteAdded]);
+  // useEffect(() => {
+  //   if (lid) {
+  //     fetchLeadNotes(lid);
+  //   }
+  // }, [noteAdded]);
 
   return (
     <div>
-      {notesLoading ? (
-        <Box
-          display={"flex"}
-          justifyContent={"center"}
-          alignItems={"center"}
-          height={200}
-        >
-          <Spinner />
-        </Box>
-      ) : (
+      { (
         <VStack mt={4} alignItems="flex-start">
           {allNotes.length === 0 && (
             <Text
@@ -62,7 +55,7 @@ const LeadNotes = ({ lid, noteAdded }) => {
             >
               {allNotes.map((note) => {
                 return (
-                  <GridItem colSpan={{ base: 12, md: 6, lg: 6 }}>
+                  <GridItem colSpan={{ base: 12, md: 12, lg: 12 }}>
                     <Box
                       backgroundColor={"whitesmoke"}
                       borderRadius={"10px"}
@@ -79,11 +72,9 @@ const LeadNotes = ({ lid, noteAdded }) => {
                         alignItems={"center"}
                       >
                         <Text fontStyle={"italic"}>
-                          {note.addedBy?.firstName +
-                            " " +
-                            note.addedBy?.lastName}
+                          {note.by}
                         </Text>
-                        <Text fontSize={13}>
+                        {/* <Text fontSize={13}>
                           {new Date(note.createdAt).toLocaleString("en-GB", {
                             year: "numeric",
                             month: "2-digit",
@@ -93,7 +84,7 @@ const LeadNotes = ({ lid, noteAdded }) => {
                             second: "2-digit",
                             hour12: false,
                           })}
-                        </Text>
+                        </Text> */}
                       </Box>
 
                       <Text color={"black"} fontWeight={"bold"} mt={3}>

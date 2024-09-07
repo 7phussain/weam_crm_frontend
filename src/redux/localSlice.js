@@ -2,7 +2,8 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
     user: JSON.parse(window.localStorage.getItem('user')),
-    tree: null
+    tree: null,
+    users:null
 };
 
 const localSlice = createSlice({
@@ -19,10 +20,13 @@ const localSlice = createSlice({
         },
         setTree: (state, action) => {
             state.tree = action.payload; 
+        },
+        setUsers:(state,action)=>{
+            state.users = action?.payload
         }
     },
 });
 
-export const { setUser, clearUser, setTree } = localSlice.actions;
+export const { setUser, clearUser, setTree,setUsers } = localSlice.actions;
 
 export default localSlice.reducer;

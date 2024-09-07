@@ -32,6 +32,7 @@ import {
   MenuDivider,
   useColorModeValue,
   useDisclosure,
+  Heading,
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
@@ -56,7 +57,7 @@ import Card from "components/card/Card";
 import CountUpComponent from "components/countUpComponent/countUpComponent";
 import Pagination from "components/pagination/Pagination";
 import Spinner from "components/spinner/Spinner";
-import { FaHistory, FaSort, FaSortDown, FaSortUp } from "react-icons/fa";
+import { FaHistory, FaPlus, FaSort, FaSortDown, FaSortUp } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getApi } from "services/api";
@@ -65,7 +66,7 @@ import AddEmailHistory from "views/admin/emailHistory/components/AddEmail";
 import AddPhoneCall from "views/admin/phoneCall/components/AddPhoneCall";
 import Add from "../Add";
 import { AddIcon } from "@chakra-ui/icons";
-import { CiMenuKebab } from "react-icons/ci";
+import { CiEdit, CiMenuKebab } from "react-icons/ci";
 import Edit from "../Edit";
 import { useFormik } from "formik";
 import { BsColumnsGap, BsWhatsapp } from "react-icons/bs";
@@ -83,6 +84,11 @@ import { toast } from "react-toastify";
 import { putApi } from "services/api";
 import { constant } from "constant";
 import AdvancedSearchModal from "./AdvancedSearchModal";
+import { FaCheck } from "react-icons/fa6";
+import { IoMdClose } from "react-icons/io";
+import LeadNotes from "./LeadNotes";
+import { HSeparator } from "components/separator/Separator";
+import NewNoteModal from "./NewNoteModal";
 export default function CheckTable(props) {
   const {
     tableData,
@@ -108,7 +114,7 @@ export default function CheckTable(props) {
     totalLeads,
     fetchSearchedData,
     setData,
-    checkApproval
+    checkApproval,makeRequest
   } = props;
   const textColor = useColorModeValue("gray.500", "white");
   const borderColor = useColorModeValue("gray.200", "whiteAlpha.100");
@@ -148,6 +154,11 @@ export default function CheckTable(props) {
   const [manageColumns, setManageColumns] = useState(false);
   const [tempSelectedColumns, setTempSelectedColumns] = useState(dataColumn); // State to track changes
   const [taskInits, setTaskInits] = useState({});
+  const [isCoinsModal,setIsCoinsModal] = useState(null)
+  const [amount,setAmount] = useState(0)
+  const [userCoins,setUserCoins] = useState(0)
+  const [newNoteModal,setNewNoteModal] = useState(false)
+  const [notesModal,setNotesModal] = useState(false)
   useEffect(()=>{
     setTempSelectedColumns(dataColumn)
   },[dataColumn])
@@ -431,76 +442,33 @@ export default function CheckTable(props) {
       console.error(e);
     }
   };
+  useEffect(()=>{
+    async function fetchUser(){
 
-  const approveChangeHandler = async(e,leadId) =>{
+      const res = await getApi(`api/user/view/${user?._id}`)
+
+      setUserCoins(res?.data?.coins)
+    }
+    fetchUser();
+  },[])
+
+  const approveChangeHandler = async(isApproved,row) =>{
     const user = JSON.parse(localStorage.getItem('user'))
     console.log(user?.role,"role")
-    if(e?.target?.value == "none") return;
     try{
-     const res = await axios.put(constant["baseUrl"]+"api/adminApproval/update",{
-      isApproved:e?.target?.value == "accept"?true:false,
-      objectId:checkApproval(leadId)._id,
-      // isManager:
-     },{
-      headers:{
-        Authorization:  (localStorage.getItem("token") || sessionStorage.getItem("token"))
-      }
-     })
-
-     if(res?.data?.status){
-      if(checkApproval(leadId).agentId?false:true){
-        try {
-          // setLoading(true);
-          const dataObj = {
-            managerAssigned:checkApproval(leadId)?.managerId ,
-          }; 
-    
-          if (e.target.value === "") {
-            dataObj["agentAssigned"] = "";
+        const res = await axios.put(`${constant["baseUrl"]}api/coinsRequest/update`,{
+          userId:row?.userId,
+          coins:Number(amount),
+          isApproved: isApproved === "accept"?true:false,
+          objectId:row?._id
+        },{
+          headers:{
+            Authorization:  (localStorage.getItem("token") || sessionStorage.getItem("token"))
           }
-    
-          await putApi(`api/lead/edit/${leadId}`, dataObj);
-          toast.success("Manager updated successfuly");
-          // setManagerSelected(dataObj.managerAssigned || "");
-          // setData(prevData => {
-          //   const newData = [...prevData]; 
-    
-          //   const updateIdx = newData.findIndex((l) => l._id.toString() === leadID); 
-          //   if(updateIdx !== -1) {
-          //     newData[updateIdx].managerAssigned = dataObj.managerAssigned; 
-          //     newData[updateIdx].agentAssigned = ""; 
-          //   }
-          //   return newData; 
-          // })
-        } catch (error) {
-          console.log(error);
-          toast.error("Failed to update the manager");
-        }
-      }else{
-        try {
-          const data = {
-            agentAssigned: checkApproval(leadId)?.agentId,
-          };
-    
-          // setLoading(true); 
-    
-          await putApi(`api/lead/edit/${leadId}`, data);
-          toast.success("Agent updated successfuly");
-          
-          // fetchData();
-        } catch (error) {
-          console.log(error);
-          toast.error("Failed to update the agent");
-        }
-      }
-       
-    
-      
-     }
-
-     console.log(res,"response from update of lead request")
+        })
+        fetchData();
     }catch(error){
-      console.log("error",error)
+         console.log(error,"error")
     }
   }
 
@@ -638,7 +606,42 @@ export default function CheckTable(props) {
         w="100%"
         overflowX={{ sm: "scroll", lg: "hidden" }}
       >
+       {user?.role !== "superAdmin" && <div style={{
+        display:"flex",
+        justifyContent:'space-between'
+       }}>
+        <div style={{
+          display:"flex",
+          alignItems:"center",
+          gap:"10px"
+        }}>
+          <div style={{
+            fontSize:"22px",
+            color:'#F0A608',
+
+          }}>
+            COINS
+          </div>
+          <div style={{
+            fontSize:'22px',
+            color:"#F0A608"
+          }}>
+            {userCoins}
+          </div>
+        </div>
         
+       <Button
+        variant="brand"
+        sx={{
+          width:"fit-content"
+        }}
+        onClick={makeRequest}
+        >
+          Make Request for Points
+        </Button>
+        </div>}
+        
+      
 
         <Box overflowY={"auto"} className="table-fix-container">
           <Table
@@ -779,9 +782,10 @@ export default function CheckTable(props) {
                               </Text>
                             </Flex>
                           );
-                        } else if (cell?.column.Header === "Name") {
-                          data = access?.view ? (
-                            <Link to={`/leadView/${row?.original?._id}`}>
+                        } else if (cell?.column.Header === "Request Date") {
+                        //  console.log(cell?.value?.text,cell?.value,"cell value")
+                         data= (
+                            
                               <Text
                                 me="10px"
                                 sx={{
@@ -790,67 +794,65 @@ export default function CheckTable(props) {
                                     textDecoration: "underline",
                                   },
                                 }}
+                                pl={19}
                                 color="brand.600"
                                 fontSize="sm"
                                 // fontWeight="500"
                                 fontWeight="700"
                               >
-                                {cell?.value?.text || cell?.value}
+                                {/* {cell?.value?.text || cell?.value} */}
+                                
+                                 {new Date(row?.original?.createdAt).toLocaleDateString('en-US', {  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit'
+})}
+
                               </Text>
-                            </Link>
-                          ) : (
-                            <Text
-                              me="10px"
-                              fontSize="sm"
-                              // fontWeight="500"
-                              fontWeight="700"
-                            >
-                              {cell?.value?.text || cell?.value}
-                            </Text>
-                          );
-                        } else if (cell?.column.Header === "Whatsapp Number") {
+                          
+                          ) 
+                        } else if (cell?.column.Header === "Request Notes") {
                           data = (
-                            <Text
+                           <> <Text
                               me="10px"
                               fontSize="sm"
                               // fontWeight="500"
                               fontWeight="700"
+                              pl={19}
                             >
-                              {cell?.value?.text || cell?.value || "-"}
+                              {row?.original?.requestNotes?.length>0?row?.original?.requestNotes[row?.original?.requestNotes?.length-1]?.note:"-"}
                             </Text>
+                        
+                            <Button
+                              onClick={()=>setNotesModal(row?.original?._id)}
+                               sx={{
+                                padding:"5px",
+                                borderRadius:"50%",
+                                cursor:"pointer",
+                                "hover":{
+                                  backgroundColor:'blue',
+                                  color:"white"
+                                }
+
+                              }}><CiEdit size={18}/></Button>
+                              
+                           </>
                           );
-                        } else if (cell?.column.Header === "Phone Number") {
-                          data = callAccess?.create ? (
-                            <Text
+                        } else if (cell?.column.Header === "Username") {
+                          
+                          data=(  <Text
                               me="10px"
                               fontSize="sm"
                               // fontWeight="500"
                               fontWeight="700"
-                              color="brand.600"
-                              sx={{
-                                "&:hover": {
-                                  color: "blue.500",
-                                  textDecoration: "underline",
-                                  cursor: "pointer",
-                                },
-                              }}
+                              pl={19}
                               onClick={() => {
                                 setAddPhoneCall(true);
                                 setCallSelectedId(row?.original?._id);
                               }}
                             >
-                              {cell?.value?.formula || cell?.value || "-"}
+                              {cell?.value?.text || cell?.value || "-"}
                             </Text>
-                          ) : (
-                            <Text
-                              me="10px"
-                              fontSize="sm"
-                              // fontWeight="500"
-                              fontWeight="700"
-                            >
-                              {cell?.value?.formula || cell?.value || "-"}
-                            </Text>
-                          );
+                          )
                         } else if (cell?.column.Header === "Address") {
                           data = (
                             <Text
@@ -862,17 +864,26 @@ export default function CheckTable(props) {
                               {cell?.value?.text || cell?.value || ""}
                             </Text>
                           );
-                        } else if (cell?.column.Header === "Status") {
+                        } 
+                        else if (cell?.column.Header === "Role") {
                           data = (
-                            <div className="selectOpt">
-                              <RenderStatus
+                            <Text pl={19} className="selectOpt">
+                             
+                              {cell?.value?.text || cell?.value || ""}
+                            </Text>
+                          );
+                        }else if (cell?.column.Header === "Status") {
+                          data = (
+                            <Text className="selectOpt" pl={19}>
+                              {/* <RenderStatus
                                 setUpdatedStatuses={setUpdatedStatuses}
                                 id={cell?.row?.original?._id}
                                 cellValue={cell?.value}
-                              />
-                            </div>
+                              /> */}
+                              {cell?.row?.original?.requestStatus}
+                            </Text>
                           );
-                        } else if (cell?.column.Header === "Lead Approval"){
+                        } else if (cell?.column.Header === "Coins Approval"){
                           console.log(checkApproval(row?.original?._id),"leadId")
                           data = (
                             // <div className="selectOpt">
@@ -882,26 +893,56 @@ export default function CheckTable(props) {
                             //     cellValue={cell?.value}
                             //   />
                             // </div>
-                            checkApproval(row?.original?._id)?.approvalStatus != "pending"?checkApproval(row?.original?._id?.toString())?.approvalStatus :<Select
-                            defaultValue={"None"}
-                            // className={changeStatus(value)}
-                            onChange={(e)=>approveChangeHandler(e,row?.original?._id?.toString())}
-                            height={7}
-                            width={130}
-                            style={{ fontSize: "14px" }}
-                          >
-                            <option value="none">None</option>
-                            <option value="accept">Accept</option>
-                            <option value="reject">Reject</option>
-                                  </Select>
+                            row?.original?.requestStatus != "pending"?row?.original?.requestStatus :
+                            <div style={{
+                              display:"flex",
+                              gap:"10px",
+                              paddingLeft:"19px"
+                            }}>
+                              <Button
+                              onClick={()=>setIsCoinsModal(row?.original)}
+                               sx={{
+                                padding:"5px",
+                                borderRadius:"50%",
+                                cursor:"pointer",
+                                "hover":{
+                                  backgroundColor:'blue',
+                                  color:"white"
+                                }
+
+                              }}><FaCheck size={18}/></Button>
+                              <Button 
+                              onClick={()=>approveChangeHandler("reject",row?.original)}
+                               sx={{
+                                padding:"5px",
+                                borderRadius:"50%",
+                                cursor:"pointer",
+                                "hover":{
+                                  backgroundColor:'red',
+                                  color:"white"
+                                }
+                                
+                              }}><IoMdClose size={18}/></Button>
+                            </div>
+                          //   <Select
+                          //   defaultValue={"None"}
+                          //   // className={changeStatus(value)}
+                          //   onChange={(e)=>approveChangeHandler(e,row?.original?._id?.toString())}
+                          //   height={7}
+                          //   width={130}
+                          //   style={{ fontSize: "14px" }}
+                          // >
+                          //   <option value="none">None</option>
+                          //   <option value="accept">Accept</option>
+                          //   <option value="reject">Reject</option>
+                          //         </Select>
+
                           );
-                        }  else if(cell?.column.Header === "Approval Status"){
+                        }  else if(cell?.column.Header === "Total Coins"){
                             data=(
-                              <h1 style={{textAlign:"center"}}>
-                                { 
-                                checkApproval(row?.original?._id?.toString())?.approvalStatus
-                            }
-                              </h1>
+                              <Text pl={19}>
+                                {cell?.value?.text || cell?.value || "-"}
+                              </Text>
                             )
                         } else if (cell?.column.Header === "Manager") {
                           data = (
@@ -1139,15 +1180,14 @@ export default function CheckTable(props) {
       <Modal
         size="2xl"
         onClose={() => {
-          setAdvaceSearch(false);
-          resetForm();
+          setIsCoinsModal(null)
         }}
-        isOpen={advaceSearch}
+        isOpen={isCoinsModal}
         isCentered
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Advance Search</ModalHeader>
+          <ModalHeader></ModalHeader>
           <ModalCloseButton
             onClick={() => {
               setAdvaceSearch(false);
@@ -1156,7 +1196,7 @@ export default function CheckTable(props) {
           />
           <ModalBody>
             <Grid templateColumns="repeat(12, 1fr)" mb={3} gap={2}>
-              <GridItem colSpan={{ base: 12, md: 6 }}>
+              <GridItem colSpan={{ base: 12, md: 12 }}>
                 <FormLabel
                   display="flex"
                   ms="4px"
@@ -1166,268 +1206,26 @@ export default function CheckTable(props) {
                   mb="0"
                   mt={2}
                 >
-                  Name
+                  How much you want to assign?
                 </FormLabel>
                 <Input
                   fontSize="sm"
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  value={values?.leadName}
+                  type="number"
+                  onChange={(e)=>setAmount(e?.target?.value)}
+                  // onBlur={handleBlur}
+                  value={amount}
                   name="leadName"
-                  placeholder="Enter Lead Name"
+                  placeholder="Enter Amount"
                   fontWeight="500"
                 />
-                <Text mb="10px" color={"red"}>
+                {/* <Text mb="10px" color={"red"}>
                   {" "}
                   {errors.leadName && touched.leadName && errors.leadName}
-                </Text>
+                </Text> */}
               </GridItem>
-              <GridItem colSpan={{ base: 12, md: 6 }}>
-                <FormLabel
-                  display="flex"
-                  ms="4px"
-                  fontSize="sm"
-                  fontWeight="600"
-                  color={"#000"}
-                  mb="0"
-                  mt={2}
-                >
-                  Status
-                </FormLabel>
-                <Select
-                  value={values?.leadStatus}
-                  fontSize="sm"
-                  name="leadStatus"
-                  onChange={handleChange}
-                  fontWeight="500"
-                  placeholder={"Select Lead Status"}
-                >
-                  <option value="active">Interested</option>
-                  <option value="pending">Not-interested</option>
-                  <option value="sold">Sold</option>
-                  <option value="new">New</option>
-                  <option value="no_answer">No answer</option>
-                  <option value="unreachable">Unreachable</option>
-
-                  <option value="waiting">Waiting</option>
-                  <option value="follow_up">Follow Up</option>
-                  <option value="meeting">Meeting</option>
-                  <option value="follow_up_after_meeting">
-                    Follow Up After Meeting
-                  </option>
-                  <option value="deal">Deal</option>
-                  <option value="junk">Junk</option>
-                  <option value="whatsapp_send">Whatsapp Send</option>
-                  <option value="whatsapp_rec">Whatsapp Rec</option>
-                  <option value="deal_out">Deal Out</option>
-                  <option value="shift_project">Shift Project</option>
-                  <option value="wrong_number">Wrong Number</option>
-                  <option value="broker">Broker</option>
-                  <option value="voice_mail">Voice Mail</option>
-                  <option value="request">Request</option>
-                </Select>
-                <Text mb="10px" color={"red"}>
-                  {" "}
-                  {errors.leadStatus && touched.leadStatus && errors.leadStatus}
-                </Text>
-              </GridItem>
-
-              <GridItem colSpan={{ base: 12, md: 6 }}>
-                <FormLabel
-                  display="flex"
-                  ms="4px"
-                  fontSize="sm"
-                  fontWeight="600"
-                  color={"#000"}
-                  mb="0"
-                  mt={2}
-                >
-                  Email
-                </FormLabel>
-                <Input
-                  fontSize="sm"
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  value={values?.leadEmail}
-                  name="leadEmail"
-                  placeholder="Enter Lead Email"
-                  fontWeight="500"
-                />
-                <Text mb="10px" color={"red"}>
-                  {" "}
-                  {errors.leadEmail && touched.leadEmail && errors.leadEmail}
-                </Text>
-              </GridItem>
-              <GridItem colSpan={{ base: 12, md: 6 }}>
-                <FormLabel
-                  display="flex"
-                  ms="4px"
-                  fontSize="sm"
-                  fontWeight="600"
-                  color={"#000"}
-                  mb="0"
-                  mt={2}
-                >
-                  Phone Number
-                </FormLabel>
-                <Input
-                  fontSize="sm"
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  value={values?.leadPhoneNumber}
-                  name="leadPhoneNumber"
-                  placeholder="Enter Lead PhoneNumber"
-                  fontWeight="500"
-                />
-                <Text mb="10px" color={"red"}>
-                  {" "}
-                  {errors.leadPhoneNumber &&
-                    touched.leadPhoneNumber &&
-                    errors.leadPhoneNumber}
-                </Text>
-              </GridItem>
-
-              {user?.role === "superAdmin" && (
-                <GridItem colSpan={{ base: 12, md: 6 }}>
-                  <FormLabel
-                    display="flex"
-                    ms="4px"
-                    fontSize="sm"
-                    fontWeight="600"
-                    color={"#000"}
-                    mb="0"
-                    mt={2}
-                  >
-                    Manager
-                  </FormLabel>
-                  <Box>
-                    <Select
-                      name="managerAssigned"
-                      onChange={handleChange}
-                      value={values["managerAssigned"]}
-                    >
-                      <option selected value={""}>
-                        Select manager
-                      </option>
-                      {tree &&
-                        tree["managers"] &&
-                        tree["managers"]?.map((user) => {
-                          return (
-                            <option
-                              key={user?._id?.toString()}
-                              value={user?._id?.toString()}
-                            >
-                              {user?.firstName + " " + user?.lastName}
-                            </option>
-                          );
-                        })}
-                    </Select>
-                  </Box>
-
-                  <Text mb="10px" color={"red"}>
-                    {" "}
-                    {errors.fromLeadScore &&
-                      touched.fromLeadScore &&
-                      errors.fromLeadScore}
-                  </Text>
-                </GridItem>
-              )}
-
-              {user?.role === "superAdmin" && values.managerAssigned && (
-                <GridItem colSpan={{ base: 12, md: 6 }}>
-                  <FormLabel
-                    display="flex"
-                    ms="4px"
-                    fontSize="sm"
-                    fontWeight="600"
-                    color={"#000"}
-                    mb="0"
-                    mt={2}
-                  >
-                    Agent
-                  </FormLabel>
-                  <Box>
-                    <Select
-                      name="agentAssigned"
-                      onChange={handleChange}
-                      value={values["agentAssigned"]}
-                    >
-                      <option selected value={""}>
-                        Select agent
-                      </option>
-                      {tree &&
-                        tree["managers"] &&
-                        tree["agents"][
-                          "manager-" + values.managerAssigned
-                        ]?.map((user) => {
-                          return (
-                            <option
-                              key={user?._id?.toString()}
-                              value={user?._id?.toString()}
-                            >
-                              {user?.firstName + " " + user?.lastName}
-                            </option>
-                          );
-                        })}
-                    </Select>
-                  </Box>
-
-                  <Text mb="10px" color={"red"}>
-                    {" "}
-                    {errors.fromLeadScore &&
-                      touched.fromLeadScore &&
-                      errors.fromLeadScore}
-                  </Text>
-                </GridItem>
-              )}
-
-              {user?.roles[0]?.roleName === "Manager" && (
-                <GridItem colSpan={{ base: 12, md: 6 }}>
-                  <FormLabel
-                    display="flex"
-                    ms="4px"
-                    fontSize="sm"
-                    fontWeight="600"
-                    color={"#000"}
-                    mb="0"
-                    mt={2}
-                  >
-                    Agent
-                  </FormLabel>
-                  <Box>
-                    <Select
-                      name="agentAssigned"
-                      onChange={handleChange}
-                      value={values["agentAssigned"]}
-                    >
-                      <option selected value={""}>
-                        Select agent
-                      </option>
-                      {tree &&
-                        tree["managers"] &&
-                        tree["agents"]["manager-" + user?._id?.toString()]?.map(
-                          (user) => {
-                            return (
-                              <option
-                                key={user?._id?.toString()}
-                                value={user?._id?.toString()}
-                              >
-                                {user?.firstName + " " + user?.lastName}
-                              </option>
-                            );
-                          }
-                        )}
-                    </Select>
-                  </Box>
-
-                  <Text mb="10px" color={"red"}>
-                    {" "}
-                    {errors.fromLeadScore &&
-                      touched.fromLeadScore &&
-                      errors.fromLeadScore}
-                  </Text>
-                </GridItem>
-              )}
+          
+           
+           
             </Grid>
           </ModalBody>
           <ModalFooter>
@@ -1435,83 +1233,75 @@ export default function CheckTable(props) {
               colorScheme="brand"
               size="sm"
               mr={2}
-              onClick={handleSubmit}
-              disabled={isLoding || !dirty ? true : false}
-            >
-              {isLoding ? <Spinner /> : "Search"}
-            </Button>
-            <Button
-              colorScheme="red"
-              variant="outline"
-              size="sm"
-              onClick={() => resetForm()}
-            >
-              Clear
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      <Modal
-        onClose={() => {
-          setManageColumns(false);
-        }}
-        isOpen={manageColumns}
-        isCentered
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Manage Columns</ModalHeader>
-          <ModalCloseButton
-            onClick={() => {
-              setManageColumns(false);
-            }}
-          />
-          <ModalBody>
-            <div>
-              {dynamicColumns.map((column) => (
-                <Text display={"flex"} key={column.accessor} py={2}>
-                  <Checkbox
-                    value={selectedColumns.some(
-                      (selectedColumn) =>
-                        selectedColumn.accessor === column.accessor
-                    )}
-                    defaultChecked={selectedColumns.some(
-                      (selectedColumn) =>
-                        selectedColumn.accessor === column.accessor
-                    )}
-                    onChange={() => toggleColumnVisibility(column.accessor)}
-                    pe={2}
-                  />
-                  {column.Header}
-                </Text>
-              ))}
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              colorScheme="brand"
-              size="sm"
-              mr={2}
-              onClick={() => {
-                setSelectedColumns(tempSelectedColumns);
-                setManageColumns(false);
-                resetForm();
+              onClick={()=>{
+                approveChangeHandler("accept",isCoinsModal)
+                setIsCoinsModal(null)
               }}
-              disabled={isLoding ? true : false}
+              disabled={amount ==0}
             >
-              {isLoding ? <Spinner /> : "Save"}
+              {"Continue"}
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              colorScheme="red"
-              onClick={() => handleColumnClear()}
-            >
-              Close
-            </Button>
+           
           </ModalFooter>
         </ModalContent>
-      </Modal>
+       </Modal>
+      <Modal
+onClose={() => {
+  setNotesModal(false);
+}}
+isOpen={notesModal}
+isCentered
+>
+<ModalOverlay />
+<ModalContent>
+  <ModalHeader>Request Notes </ModalHeader>
+  <ModalCloseButton
+    onClick={() => {
+      setNotesModal(false);
+    }}
+  />
+  
+  <ModalBody>
+
+    
+    <GridItem colSpan={{ base: 4 }}>
+          <Card minH={"50vh"}>
+            <Flex
+              py={3}
+              justifyContent={"space-between"}
+              alignItems={"center"}
+            >
+              <Heading flex={2} size="md">
+                Lead Notes/Comments
+              </Heading>
+
+              
+               
+               <Flex flex={1} justifyContent={"flex-end"} alignItems={"center"}>
+               
+                <Button color="white"
+                 onClick={() => setNewNoteModal(true)} 
+                 style={{
+                  padding: "0 20px", 
+                  color: "white",
+                }} leftIcon={<FaPlus />} size="sm" variant="brand">
+                  Add New Note
+                </Button>
+              </Flex>
+            </Flex>
+            <HSeparator />
+             
+            <LeadNotes notes={allData.find(data=>data?._id === notesModal)?.requestNotes} />
+            
+          </Card>
+        </GridItem>
+  </ModalBody>
+  <ModalFooter>
+
+  </ModalFooter>
+</ModalContent>
+</Modal> 
+ 
       {/* Delete model */}
       <Delete
         isOpen={deleteModel}
@@ -1523,6 +1313,19 @@ export default function CheckTable(props) {
         setAction={setAction}
         setSelectAllChecked={setSelectAllChecked}
       />
+       <NewNoteModal
+        isOpen={newNoteModal}
+        onClose={() => setNewNoteModal(false)}
+        paramId={notesModal}
+        fetchData={fetchData}
+        // setNoteAdded={setNoteAdded}
+      />
+      
+      
     </>
+    
   );
 }
+
+
+

@@ -221,6 +221,12 @@ const AdvancedSearchModal = ({
                           </option>
                         );
                       })}
+                      <option
+                            key={-1}
+                            value={-1}
+                          >
+                            No Manager
+                          </option>
                   </Select>
                 </Box>
 
@@ -269,6 +275,12 @@ const AdvancedSearchModal = ({
                             </option>
                           );
                         })}
+                         <option
+                            key={-1}
+                            value={-1}
+                          >
+                            No Agent
+                          </option>
                   </Select>
                 </Box>
 

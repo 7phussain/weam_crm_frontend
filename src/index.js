@@ -24,7 +24,7 @@ import { Provider, useSelector } from "react-redux";
 import store from "./redux/store";
 import { useDispatch } from "react-redux";
 import { getApi } from "services/api";
-import { setTree } from "./redux/localSlice";
+import { setTree,setUsers } from "./redux/localSlice";
 
 function App() {
   const token = localStorage.getItem("token") || null;
@@ -50,9 +50,22 @@ function App() {
     }, 0);
   };
 
+  
+  const fetchUsers = async () => {
+    setAppLoaded(false);
+    const response = await getApi("api/user/");
+    const data = response.data || null;
+    dispatch(setUsers(data?.user));
+
+    setTimeout(() => {
+      setAppLoaded(true);
+    }, 0);
+  };
+
   useEffect(() => {
     if (getToken() && user2) {
       fetchTree();
+      fetchUsers();
     } else if(!getToken()) {
       setAppLoaded(true); 
     }

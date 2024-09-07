@@ -269,12 +269,17 @@ export default function CheckTable(props) {
         const agentsArray = Object.values(tree.agents).flatMap(managerArray => managerArray);
        agent = agentsArray.find(agent=>agent?._id?.toString() === values?.agentAssigned)
       }
-
+      if(values?.agentAssigned == -1){
+        agent ={ firstName:"No",lastName:" Agent"}
+      }
       let manager = null;
       if (values?.managerAssigned) {
         manager = tree["managers"]?.find(
           (user) => user?._id?.toString() === values?.managerAssigned
         );
+      }
+      if(values?.managerAssigned == -1){
+        manager = {firstName:"No",lastName:"Manager"}
       }
       let getValue = [
         values.leadName,

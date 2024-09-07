@@ -56,7 +56,7 @@ import Card from "components/card/Card";
 import CountUpComponent from "components/countUpComponent/countUpComponent";
 import Pagination from "components/pagination/Pagination";
 import Spinner from "components/spinner/Spinner";
-import { FaHistory, FaSort, FaSortDown, FaSortUp } from "react-icons/fa";
+import { FaCheck, FaHistory, FaSort, FaSortDown, FaSortUp } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getApi } from "services/api";
@@ -83,6 +83,8 @@ import { toast } from "react-toastify";
 import { putApi } from "services/api";
 import { constant } from "constant";
 import AdvancedSearchModal from "./AdvancedSearchModal";
+import { getUserNameById } from "utils";
+import { IoMdClose } from "react-icons/io";
 export default function CheckTable(props) {
   const {
     tableData,
@@ -121,6 +123,7 @@ export default function CheckTable(props) {
 
   const user = JSON.parse(localStorage.getItem("user"));
   const tree = useSelector((state) => state.user.tree);
+  const users = useSelector(state=>state.user?.users);
 
   const [deleteModel, setDelete] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState(false);
@@ -148,6 +151,7 @@ export default function CheckTable(props) {
   const [manageColumns, setManageColumns] = useState(false);
   const [tempSelectedColumns, setTempSelectedColumns] = useState(dataColumn); // State to track changes
   const [taskInits, setTaskInits] = useState({});
+  const [userCoins,setUserCoins] = useState(0)
   useEffect(()=>{
     setTempSelectedColumns(dataColumn)
   },[dataColumn])
@@ -191,6 +195,16 @@ export default function CheckTable(props) {
     setManageColumns(!manageColumns ? !manageColumns : false);
   };
 
+  useEffect(()=>{
+    async function fetchUser(){
+
+      const res = await getApi(`api/user/view/${user?._id}`)
+
+      setUserCoins(res?.data?.coins)
+    }
+    fetchUser();
+  },[tableData])
+
   const initialValues = {
     leadName: "",
     leadStatus: "",
@@ -218,6 +232,7 @@ export default function CheckTable(props) {
     initialValues: initialValues,
     validationSchema: validationSchema,
     onSubmit: (values, { resetForm }) => {
+      console.log(values?.managerAssigned,"manager Assigned")
       setIsLoding(true);
       const searchResult = allData?.filter(
         (item) =>
@@ -260,12 +275,19 @@ export default function CheckTable(props) {
           (user) => user?._id?.toString() === values?.agentAssigned
         );
       }
+      if(values?.agentAssigned == -1){
+        agent ={ firstName:"No",lastName:" Agent"}
+      }
 
       let manager = null;
       if (values?.managerAssigned) {
         manager = tree["managers"]?.find(
           (user) => user?._id?.toString() === values?.managerAssigned
         );
+      }
+      if(values?.managerAssigned == -1){
+        alert("it is called in manager")
+        manager = {firstName:"No",lastNamt:"Manager"}
       }
       let getValue = [
         values.leadName,
@@ -432,14 +454,14 @@ export default function CheckTable(props) {
     }
   };
 
-  const approveChangeHandler = async(e,leadId) =>{
+  const approveChangeHandler = async(e,leadId,agentId,managerId,approvalId) =>{
     const user = JSON.parse(localStorage.getItem('user'))
     console.log(user?.role,"role")
-    if(e?.target?.value == "none") return;
+    if(e == "none") return;
     try{
      const res = await axios.put(constant["baseUrl"]+"api/adminApproval/update",{
-      isApproved:e?.target?.value == "accept"?true:false,
-      objectId:checkApproval(leadId)._id,
+      isApproved:e == "accept"?true:false,
+      objectId:approvalId,
       // isManager:
      },{
       headers:{
@@ -448,18 +470,23 @@ export default function CheckTable(props) {
      })
 
      if(res?.data?.status){
-      if(checkApproval(leadId).agentId?false:true){
+      if(agentId?false:true){
         try {
           // setLoading(true);
           const dataObj = {
-            managerAssigned:checkApproval(leadId)?.managerId ,
+            managerAssigned:managerId ,
           }; 
     
-          if (e.target.value === "") {
+          if (e === "") {
             dataObj["agentAssigned"] = "";
           }
     
           await putApi(`api/lead/edit/${leadId}`, dataObj);
+          const r = await getApi(`api/user/view/${managerId}`)
+          const res = await putApi(`api/user/edit/${managerId}`,{
+            ...user,coins:r?.data?.coins-50
+          })
+          fetchData();
           toast.success("Manager updated successfuly");
           // setManagerSelected(dataObj.managerAssigned || "");
           // setData(prevData => {
@@ -479,13 +506,18 @@ export default function CheckTable(props) {
       }else{
         try {
           const data = {
-            agentAssigned: checkApproval(leadId)?.agentId,
+            agentAssigned: agentId,
           };
     
           // setLoading(true); 
     
           await putApi(`api/lead/edit/${leadId}`, data);
+          const r = await getApi(`api/user/view/${agentId}`)
+          const res = await putApi(`api/user/edit/${agentId}`,{
+            ...user,coins:r?.data?.coins-50
+          })
           toast.success("Agent updated successfuly");
+          fetchData();
           
           // fetchData();
         } catch (error) {
@@ -495,7 +527,7 @@ export default function CheckTable(props) {
       }
        
     
-      
+  
      }
 
      console.log(res,"response from update of lead request")
@@ -572,9 +604,42 @@ export default function CheckTable(props) {
     }
   }, [pageSize]);
 
+
+  const sendRequest = async (leadID) => {
+    const user = JSON.parse(localStorage.getItem('user'))
+    // if(user._id == e.target.value){
+      // alert("The manager is wroking")
+    //  const res= await postApi("api/adminApproval/add", {leadId: leadID, managerId: e.target.value,},true);
+    //    console.log(res.data)
+let  payload = {
+  leadId:leadID,
+}
+
+if(user?.roles[0]?.roleName =="Agent"){
+  payload.agentId = user?._id
+}else if(user?.roles[0]?.roleName =="Manager"){
+  payload.managerId = user?._id
+}
+
+
+    try{
+      const res = await axios.post(constant["baseUrl"]+"api/adminApproval/add",payload,{
+        headers:{
+          Authorization:  (localStorage.getItem("token") || sessionStorage.getItem("token"))
+        }
+      })
+      console.log(res.data)
+      fetchData()
+
+    }catch(error){
+      console.log(error,"error")
+    }
+    // } 
+  };
+
   return (
     <>
-      <Flex
+      {/* <Flex
         p={4}
         alignItems={"center"}
         style={{
@@ -632,14 +697,14 @@ export default function CheckTable(props) {
             Clear
           </Button>
         )}
-      </Flex>
+      </Flex> */}
       <Card
         direction="column"
         w="100%"
         overflowX={{ sm: "scroll", lg: "hidden" }}
       >
         <Grid templateColumns="repeat(12, 1fr)" gap={2}>
-          <GridItem
+          {/* <GridItem
             colSpan={{ base: 8 }}
             display={"flex"}
             alignItems={"center"}
@@ -699,7 +764,7 @@ export default function CheckTable(props) {
                 />
               )}
             </Flex>
-          </GridItem>
+          </GridItem> */}
 
           {/* <GridItem
             display={"flex"}
@@ -982,6 +1047,7 @@ export default function CheckTable(props) {
                                 color="brand.600"
                                 fontSize="sm"
                                 // fontWeight="500"
+                                pl="24px"
                                 fontWeight="700"
                               >
                                 {cell?.value?.text || cell?.value}
@@ -993,6 +1059,7 @@ export default function CheckTable(props) {
                               fontSize="sm"
                               // fontWeight="500"
                               fontWeight="700"
+                              pl="19px"
                             >
                               {cell?.value?.text || cell?.value}
                             </Text>
@@ -1062,7 +1129,6 @@ export default function CheckTable(props) {
                             </div>
                           );
                         } else if (cell?.column.Header === "Lead Approval"){
-                          console.log(checkApproval(row?.original?._id),"leadId")
                           data = (
                             // <div className="selectOpt">
                             //   <ApprovalStatus
@@ -1071,51 +1137,85 @@ export default function CheckTable(props) {
                             //     cellValue={cell?.value}
                             //   />
                             // </div>
-                            checkApproval(row?.original?._id)?.approvalStatus != "pending"?checkApproval(row?.original?._id?.toString())?.approvalStatus :<Select
-                            defaultValue={"None"}
-                            // className={changeStatus(value)}
-                            onChange={(e)=>approveChangeHandler(e,row?.original?._id?.toString())}
-                            height={7}
-                            width={130}
-                            style={{ fontSize: "14px" }}
-                          >
-                            <option value="none">None</option>
-                            <option value="accept">Accept</option>
-                            <option value="reject">Reject</option>
-                                  </Select>
+                            row?.original?.approvalStatus != "pending"?row?.original?.approvalStatus :
+                            <div style={{
+                              display:"flex",
+                              gap:"10px",
+                              paddingLeft:"19px"
+                            }}>
+                              <Button
+                              onClick={()=>approveChangeHandler("accept",row?.original?.leadId?.toString(),row?.original?.agentId,row?.original?.managerId,row?.original?._id)}
+                               sx={{
+                                padding:"5px",
+                                borderRadius:"50%",
+                                cursor:"pointer",
+                                "hover":{
+                                  backgroundColor:'blue',
+                                  color:"white"
+                                }
+
+                              }}><FaCheck size={18}/></Button>
+                              <Button 
+                              onClick={()=>approveChangeHandler("reject",row?.original?.leadId?.toString(),row?.original?.agentId,row?.original?.managerId,row?.original?._id)}
+                               sx={{
+                                padding:"5px",
+                                borderRadius:"50%",
+                                cursor:"pointer",
+                                "hover":{
+                                  backgroundColor:'red',
+                                  color:"white"
+                                }
+                                
+                              }}><IoMdClose size={18}/></Button>
+                            </div>
+                          //   <Select
+                          //   defaultValue={"None"}
+                          //   // className={changeStatus(value)}
+                          //   onChange={(e)=>approveChangeHandler(e,row?.original?.leadId?.toString(),row?.original?.agentId,row?.original?.managerId,row?.original?._id)}
+                          //   height={7}
+                          //   width={130}
+                          //   style={{ fontSize: "14px" }}
+                          // >
+                          //   <option value="none">None</option>
+                          //   <option value="accept">Accept</option>
+                          //   <option value="reject">Reject</option>
+                          //         </Select>
                           );
                         }  else if(cell?.column.Header === "Approval Status"){
                             data=(
                               <h1 style={{textAlign:"center"}}>
                                 { 
-                                checkApproval(row?.original?._id?.toString())?.approvalStatus
+                                row?.original?.approvalStatus
                             }
                               </h1>
                             )
                         } else if (cell?.column.Header === "Manager") {
                           data = (
-                            <RenderManager
-                              fetchData={fetchData}
-                              pageIndex={pageIndex}
-                              setData={setData}
-                              leadID={row?.original?._id?.toString()}
-                              value={cell?.value}
-                              checkApproval={checkApproval}
-                            />
+                            // <RenderManager
+                            //   fetchData={fetchData}
+                            //   pageIndex={pageIndex}
+                            //   setData={setData}
+                            //   leadID={row?.original?._id?.toString()}
+                            //   value={cell?.value}
+                            //   checkApproval={checkApproval}
+                            // />
+                            getUserNameById(row?.original?.managerId,users)
                           );
                         } else if (cell?.column.Header === "Agent") {
+                          console.log(row?.original?.agentId,row?.original?.leadName,"agent assigned ")
                           data = (
-                            <>
-                              <RenderAgent
-                              checkApproval={checkApproval}
+                            // <>
+                            //   <RenderAgent
+                            //   checkApproval={checkApproval}
                                 
-                                setData={setData}
-                                fetchData={fetchData}
-                                leadID={row?.original?._id?.toString()}
-                                managerAssigned={row?.original?.managerAssigned}
-                                value={cell?.value}
-                              />
-                            </>
+                            //     setData={setData}
+                            //     fetchData={fetchData}
+                            //     leadID={row?.original?._id?.toString()}
+                            //     managerAssigned={row?.original?.managerAssigned}
+                            //     value={cell?.value}
+                            //   />
+                            // </>
+                            getUserNameById(row?.original?.agentId,users)
                           );
                         } else if (cell?.column.Header === "Nationality") {
                           data = (
@@ -1128,8 +1228,9 @@ export default function CheckTable(props) {
                                   : "green.600"
                               }
                               fontSize="md"
+                              pl="19px"
                               fontWeight="900"
-                              textAlign={"center"}
+                              textAlign={"left"}
                             >
                               {cell?.value?.text || cell?.value || "-"}
                             </Text>
@@ -1163,50 +1264,73 @@ export default function CheckTable(props) {
                           );
                         } else if (cell?.column.Header === "Action") {
                           data = (
+                            // <Text
+                            //   fontSize="md"
+                            //   fontWeight="900"
+                            //   textAlign={"center"}
+                            // >
+                            //   <Menu isLazy>
+                            //     <MenuButton>
+                            //       <CiMenuKebab />
+                            //     </MenuButton>
+                            //     <MenuList
+                            //       minW={"fit-content"}
+                            //       transform={"translate(1520px, 173px);"}
+                            //     >
+                            //       {access?.update && (
+                            //         <MenuItem
+                            //           py={2.5}
+                            //           onClick={() => {
+                            //             setEdit(true);
+                            //             setSelectedId(cell?.row?.original._id);
+                            //           }}
+                            //           icon={<EditIcon fontSize={15} mb={1} />}
+                            //         >
+                            //           Edit
+                            //         </MenuItem>
+                            //       )}
+                                  
+                            //       {access?.delete && (
+                            //         <MenuItem
+                            //           py={2.5}
+                            //           color={"red"}
+                            //           onClick={() => {
+                            //             setSelectedValues([
+                            //               cell?.row?.original._id,
+                            //             ]);
+                            //             setDelete(true);
+                            //           }}
+                            //           icon={<DeleteIcon fontSize={15} mb={1} />}
+                            //         >
+                            //           Delete
+                            //         </MenuItem>
+                            //       )}
+                            //     </MenuList>
+                            //   </Menu>
+                            // </Text>
                             <Text
                               fontSize="md"
                               fontWeight="900"
                               textAlign={"center"}
                             >
-                              <Menu isLazy>
-                                <MenuButton>
-                                  <CiMenuKebab />
-                                </MenuButton>
-                                <MenuList
-                                  minW={"fit-content"}
-                                  transform={"translate(1520px, 173px);"}
-                                >
-                                  {access?.update && (
-                                    <MenuItem
-                                      py={2.5}
-                                      onClick={() => {
-                                        setEdit(true);
-                                        setSelectedId(cell?.row?.original._id);
-                                      }}
-                                      icon={<EditIcon fontSize={15} mb={1} />}
-                                    >
-                                      Edit
-                                    </MenuItem>
-                                  )}
-                                  
-                                  {access?.delete && (
-                                    <MenuItem
-                                      py={2.5}
-                                      color={"red"}
-                                      onClick={() => {
-                                        setSelectedValues([
-                                          cell?.row?.original._id,
-                                        ]);
-                                        setDelete(true);
-                                      }}
-                                      icon={<DeleteIcon fontSize={15} mb={1} />}
-                                    >
-                                      Delete
-                                    </MenuItem>
-                                  )}
-                                </MenuList>
-                              </Menu>
-                            </Text>
+                            {(row?.original?.agentAssigned || row?.original?.managerAssigned) ?
+                            <Button
+                             colorScheme="red"
+                            // variant="filled"
+                            size="sm" disabled>
+                            Sold Out
+                            </Button>:
+                            <Button 
+                            colorScheme="brand"
+                            // variant="filled"
+                            size="sm"
+                            onClick={()=>sendRequest(row?.original?._id)}
+                            disabled={userCoins<50}
+                            >
+                            Buy
+                            </Button>}
+                           </Text>
+                           
                           );
                         }
                         return (

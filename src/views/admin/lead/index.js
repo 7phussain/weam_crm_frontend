@@ -94,8 +94,8 @@ const Index = () => {
   );
   const [action, setAction] = useState(false);
   const [dateTime, setDateTime] = useState({
-    from: null,
-    to: null,
+    from: "",
+    to: "",
   });
   const [autoAssignLoading, setAutoAssignLoading] = useState(false);
   const [columns, setColumns] = useState(roleColumns[role] || tableColumns);
@@ -109,14 +109,14 @@ const Index = () => {
     let result = await getApi(
       user.role === "superAdmin"
         ? "api/lead/" +
-            "?dateTime=" +
-            dateTime?.from +
-            "|" +
-            dateTime?.to +
-            "&page=" +
-            pageNo +
-            "&pageSize=" +
-            pageSize
+              "?dateTime=" +
+              dateTime?.from +
+              "|" +
+              dateTime?.to +
+              "&page=" +
+              pageNo +
+              "&pageSize=" +
+              pageSize
         : `api/lead/?user=${user._id}&role=${
             user.roles[0]?.roleName
           }&dateTime=${
