@@ -328,14 +328,14 @@ useEffect(()=>{
   }, [action]);
 console.log(dynamicColumns,"manager")
   return (
-    <div>
+    <div >
       <Button  onClick={()=> setCurrentState("all_leads") } sx={{
         backgroundColor:currentState == "all_leads"&&"#B79045",
         color:currentState == "all_leads"&&"white",
         "_hover":{
         backgroundColor:currentState == "all_leads"&&"#B79045",
         }
-      }}>All Leads</Button>
+      }}> { user?.role !== "superAdmin" ? "All Leads" : "All Lead Requests" }</Button>
       <Button  onClick={()=> setCurrentState("pending") } 
         sx={{
           backgroundColor:currentState == "pending"&&"#B79045",
@@ -360,7 +360,7 @@ console.log(dynamicColumns,"manager")
         backgroundColor:currentState == "Rejected"&&"#B79045",
         }
             }}>Rejected Leads</Button>
-      <Grid templateColumns="repeat(6, 1fr)" mb={3} gap={4}>
+      <Grid templateColumns="repeat(6, 1fr)" mt={3} mb={3} gap={4}>
       
 
         <GridItem colSpan={6}>
@@ -383,7 +383,7 @@ console.log(dynamicColumns,"manager")
            checkApproval = {checkApproval}
             dateTime={dateTime}
             setDateTime={setDateTime}
-            totalLeads={data?.length}
+            totalLeads={totalLeads}
             isLoding={isLoding}
             setIsLoding={setIsLoding}
             pages={pages}

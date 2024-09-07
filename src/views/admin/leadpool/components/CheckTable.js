@@ -704,6 +704,22 @@ if(user?.roles[0]?.roleName =="Agent"){
         overflowX={{ sm: "scroll", lg: "hidden" }}
       >
         <Grid templateColumns="repeat(12, 1fr)" gap={2}>
+            <GridItem             colSpan={{ base: 8 }}
+            display={"flex"}
+            alignItems={"center"}>
+              <Text
+                color={useColorModeValue("secondaryGray.900", "white")}
+                fontSize="22px"
+                fontWeight="700"
+              >
+                Leads (
+                <CountUpComponent
+                  key={data?.length}
+                  targetNumber={totalLeads}
+                />
+                )
+              </Text>
+            </GridItem>
           {/* <GridItem
             colSpan={{ base: 8 }}
             display={"flex"}
@@ -866,7 +882,7 @@ if(user?.roles[0]?.roleName =="Agent"){
                 </MenuItem>
               </MenuList>
             </Menu>
-            {access?.create && (
+            {/* {access?.create && (
               <Button
                 onClick={() => handleClick()}
                 size="sm"
@@ -875,7 +891,7 @@ if(user?.roles[0]?.roleName =="Agent"){
               >
                 Add New
               </Button>
-            )}
+            )} */}
           </GridItem>
           <HStack spacing={4} mb={2}>
             {getTagValues &&
@@ -1034,8 +1050,8 @@ if(user?.roles[0]?.roleName =="Agent"){
                             </Flex>
                           );
                         } else if (cell?.column.Header === "Name") {
-                          data = access?.view ? (
-                            <Link to={`/leadView/${row?.original?._id}`}>
+                          data = (access?.view && row?.original?.ApprovalStatus == "Accepted") ? (
+                            <Link to={`/leadView/${row?.original?.leadId}`}>
                               <Text
                                 me="10px"
                                 sx={{

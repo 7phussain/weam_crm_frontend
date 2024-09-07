@@ -93,20 +93,20 @@ export default function User(props) {
       icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
       component: MainDashboard,
     },
-    // {
-    //   name: "HR Module",
-    //   layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
-    //   path: "/hrmodule",
-    //   icon: <Icon as={FaUserCircle} width='20px' height='20px' color='inherit' />,
-    //   component: HRModule,
-    // },
-    // {
-    //   name: "Leads Pool",
-    //   layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
-    //   path: "/pool",
-    //   icon: <Icon as={MdPeopleOutline} width='20px' height='20px' color='inherit' />,
-    //   component: LeadPool,
-    // },
+    {
+      name: "HR Module",
+      layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
+      path: "/hrmodule",
+      icon: <Icon as={FaUserCircle} width='20px' height='20px' color='inherit' />,
+      component: HRModule,
+    },
+    {
+      name: "Leads Pool",
+      layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
+      path: "/pool",
+      icon: <Icon as={MdPeopleOutline} width='20px' height='20px' color='inherit' />,
+      component: LeadPool,
+    },
     {
       name: "Sign In",
       layout: "/auth",
@@ -114,13 +114,13 @@ export default function User(props) {
       icon: <Icon as={MdLock} width="20px" height="20px" color="inherit" />,
       component: SignInCentered,
     },
-    // {
-    //   name: "Points",
-    //   layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
-    //   path: "/points",
-    //   icon: <Icon as={FaDollarSign } width='20px' height='20px' color='inherit' />,
-    //   component: CurrencyPoints,
-    // },
+    {
+      name: "Points",
+      layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
+      path: "/points",
+      icon: <Icon as={FaDollarSign } width='20px' height='20px' color='inherit' />,
+      component: CurrencyPoints,
+    },
   ];
 
   if (user?.roles[0]?.roleName === "Manager") {

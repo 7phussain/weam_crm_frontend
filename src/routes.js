@@ -94,27 +94,27 @@ const routes = [
     icon: <Icon as={MdLeaderboard} width='20px' height='20px' color='inherit' />,
     component: Lead,
   },
-  // {
-  //   name: "HR Module",
-  //   layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
-  //   path: "/hrmodule",
-  //   icon: <Icon as={FaUserCircle} width='20px' height='20px' color='inherit' />,
-  //   component: HRModule,
-  // },
-  // {
-  //   name: "Leads Pool",
-  //   layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
-  //   path: "/pool",
-  //   icon: <Icon as={MdPeopleOutline} width='20px' height='20px' color='inherit' />,
-  //   component: LeadPool,
-  // },
-  // {
-  //   name: "Points",
-  //   layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
-  //   path: "/points",
-  //   icon: <Icon as={FaDollarSign } width='20px' height='20px' color='inherit' />,
-  //   component: CurrencyPoints,
-  // },
+  {
+    name: "HR Module",
+    layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
+    path: "/hrmodule",
+    icon: <Icon as={FaUserCircle} width='20px' height='20px' color='inherit' />,
+    component: HRModule,
+  },
+  {
+    name: "Leads Pool",
+    layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
+    path: "/pool",
+    icon: <Icon as={MdPeopleOutline} width='20px' height='20px' color='inherit' />,
+    component: LeadPool,
+  },
+  {
+    name: "Points",
+    layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
+    path: "/points",
+    icon: <Icon as={FaDollarSign } width='20px' height='20px' color='inherit' />,
+    component: CurrencyPoints,
+  },
  
   {
     name: "Lead history",
