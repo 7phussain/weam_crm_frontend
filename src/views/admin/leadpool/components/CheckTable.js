@@ -484,7 +484,7 @@ export default function CheckTable(props) {
           await putApi(`api/lead/edit/${leadId}`, dataObj);
           const r = await getApi(`api/user/view/${managerId}`)
           const res = await putApi(`api/user/edit/${managerId}`,{
-            ...user,coins:r?.data?.coins-50
+            ...r?.data,coins:(allData?.find(lead=>lead?._id == leadId)?.leadStatus == "new")?r?.data?.coins-300:r?.data?.coins-150
           })
           fetchData();
           toast.success("Manager updated successfuly");
@@ -514,7 +514,7 @@ export default function CheckTable(props) {
           await putApi(`api/lead/edit/${leadId}`, data);
           const r = await getApi(`api/user/view/${agentId}`)
           const res = await putApi(`api/user/edit/${agentId}`,{
-            ...user,coins:r?.data?.coins-50
+            ...r?.data,coins:(allData?.find(lead=>lead?._id == leadId)?.leadStatus == "new")?r?.data?.coins-300:r?.data?.coins-150
           })
           toast.success("Agent updated successfuly");
           fetchData();
@@ -1341,7 +1341,7 @@ if(user?.roles[0]?.roleName =="Agent"){
                             // variant="filled"
                             size="sm"
                             onClick={()=>sendRequest(row?.original?._id)}
-                            disabled={userCoins<50}
+                            disabled={row?.original?.leadStatus == "new" || row?.original?.leadStatus == ""?userCoins<300:userCoins<150}
                             >
                             Buy
                             </Button>}
