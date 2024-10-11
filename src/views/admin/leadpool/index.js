@@ -1,4 +1,3 @@
-
 import {
   Button,
   CircularProgress,
@@ -19,11 +18,11 @@ import { constant } from "constant";
 const Index = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const role = user?.roles[0]?.roleName;
-  const [tableColumns,setTableColumns] = useState([
+  const [tableColumns, setTableColumns] = useState([
     // { Header: "#", accessor: "_id", isSortable: false, width: 10 },
     { Header: "Name", accessor: "leadName", width: 20 },
-    { Header: "Manager", accessor: "managerAssigned" },
-    { Header: "Agent", accessor: "agentAssigned" },
+    { Header: "Requested By Manager", accessor: "managerAssigned" },
+    { Header: "Requested By Agent", accessor: "agentAssigned" },
     { Header: "Phone Number", accessor: "leadPhoneNumber" },
     { Header: "Lead Email", accessor: "leadEmail" },
     { Header: "Nationality", accessor: "nationality" },
@@ -32,8 +31,8 @@ const Index = () => {
     // { Header: "Status", accessor: "leadStatus" },
     { Header: "Lead Approval", accessor: "leadWhatsappNumber" },
     // { Header: "Action", isSortable: false, center: true },
-  ])
-  const [tableColumnsManager,setTableColumnsManager] = useState([
+  ]);
+  const [tableColumnsManager, setTableColumnsManager] = useState([
     { Header: "#", accessor: "_id", isSortable: false, width: 10 },
     { Header: "Name", accessor: "leadName", width: 20 },
     { Header: "Manager", accessor: "managerAssigned" },
@@ -44,7 +43,7 @@ const Index = () => {
     { Header: "Nationality", accessor: "nationality" },
     { Header: "Action", isSortable: false, center: true },
   ]);
-  const [ tableColumnsAgent, setTableColumnsAgent] = useState( [
+  const [tableColumnsAgent, setTableColumnsAgent] = useState([
     { Header: "#", accessor: "_id", isSortable: false, width: 10 },
     { Header: "Name", accessor: "leadName", width: 20 },
     { Header: "Manager", accessor: "managerAssigned" },
@@ -63,15 +62,14 @@ const Index = () => {
   const [data, setData] = useState([]);
   const [displaySearchData, setDisplaySearchData] = useState(false);
   const [searchedData, setSearchedData] = useState([]);
-  // 
-  const [totalLeads, setTotalLeads] = useState(0); 
-  const [pages, setPages] = useState(0); 
-  const [approvals,setApprovals] = useState([]);
-  const [filteredLeads,setFilteredLeads] = useState([]);
-  const [currentState, setCurrentState]=useState("all_leads")
+  //
+  const [totalLeads, setTotalLeads] = useState(0);
+  const [pages, setPages] = useState(0);
+  const [approvals, setApprovals] = useState([]);
+  const [filteredLeads, setFilteredLeads] = useState([]);
+  const [currentState, setCurrentState] = useState("all_leads");
   const tree = useSelector((state) => state.user.tree);
 
-  
   const [dynamicColumns, setDynamicColumns] = useState(
     roleColumns[role] || tableColumns
   );
@@ -91,8 +89,6 @@ const Index = () => {
     "Email",
     "Call",
   ]);
- 
-  
 
   // async function fetchApprovals(){
   //   setIsLoding(true);
@@ -109,26 +105,21 @@ const Index = () => {
 
   //    })
   //   //  setApprovals()
-  //    setData(result.data?.approvals || []); 
-  //    setPages(result.data?.totalPages || 0); 
-  //    setTotalLeads(result.data?.totalApprovals || 0); 
+  //    setData(result.data?.approvals || []);
+  //    setPages(result.data?.totalPages || 0);
+  //    setTotalLeads(result.data?.totalApprovals || 0);
   //    setIsLoding(false);
   //   } catch (error) {
   //    console.log(error,"error")
   //   }
   //  }
-  useEffect(()=>{
-    
-
+  useEffect(() => {
     //  fetchApprovals();
     fetchData();
-   },[currentState])
+  }, [currentState]);
 
-
-   useEffect(()=>{
-
-
-    if(currentState=="Accepted"){
+  useEffect(() => {
+    if (currentState == "Accepted") {
       setTableColumnsManager([
         { Header: "#", accessor: "intID", isSortable: false, width: 10 },
         { Header: "Name", accessor: "leadName", width: 20 },
@@ -141,7 +132,7 @@ const Index = () => {
         { Header: "Timetocall", accessor: "timetocall" },
         { Header: "Nationality", accessor: "nationality" },
         // { Header: "Action", isSortable: false, center: true },
-      ])
+      ]);
       setTableColumnsAgent([
         { Header: "#", accessor: "intID", isSortable: false, width: 10 },
         { Header: "Name", accessor: "leadName", width: 20 },
@@ -154,70 +145,73 @@ const Index = () => {
         { Header: "Timetocall", accessor: "timetocall" },
         { Header: "Nationality", accessor: "nationality" },
         // { Header: "Action", isSortable: false, center: true },
-      ])
-    }else{
+      ]);
+    } else {
       setTableColumnsManager([
         // { Header: "#", accessor: "_id", isSortable: false, width: 10 },
-    { Header: "Name", accessor: "leadName", width: 20 },
-    // { Header: "Manager", accessor: "managerAssigned" },
-    // { Header: "Agent", accessor: "agentAssigned" },
-    // { Header: "Status", accessor: "leadStatus" },
-    // { Header: "Approval Status", accessor: "leadWhatsappNumber" },
-    { Header: "Nationality", accessor: "nationality" },
-    { Header: "Last Note", width: 100, accessor: "lastNote" },
-    { Header: "Intrest", accessor: "interest" },
-    
-    currentState==="all_leads"&& { Header: "Action", isSortable: false, center: true },
-      ])
+        { Header: "Name", accessor: "leadName", width: 20 },
+        // { Header: "Manager", accessor: "managerAssigned" },
+        // { Header: "Agent", accessor: "agentAssigned" },
+        // { Header: "Status", accessor: "leadStatus" },
+        // { Header: "Approval Status", accessor: "leadWhatsappNumber" },
+        { Header: "Nationality", accessor: "nationality" },
+        { Header: "Last Note", width: 100, accessor: "lastNote" },
+        { Header: "Intrest", accessor: "interest" },
+
+        currentState === "all_leads" && {
+          Header: "Action",
+          isSortable: false,
+          center: true,
+        },
+        currentState === "pending" && { Header: "Cancel" },
+      ]);
       setTableColumnsAgent([
         // { Header: "#", accessor: "_id", isSortable: false, width: 10 },
-    { Header: "Name", accessor: "leadName", width: 20 },
-    // { Header: "Manager", accessor: "managerAssigned" },
-    // { Header: "Agent", accessor: "agentAssigned" },
-    // { Header: "Status", accessor: "leadStatus" },
-    // { Header: "Approval Status", accessor: "leadWhatsappNumber" },
-    { Header: "Nationality", accessor: "nationality" },
-    { Header: "Last Note", width: 100, accessor: "lastNote" },
-    { Header: "Intrest", accessor: "interest" },
-    currentState==="all_leads"&& { Header: "Action", isSortable: false, center: true },
-    
-      ])
+        { Header: "Name", accessor: "leadName", width: 20 },
+        // { Header: "Manager", accessor: "managerAssigned" },
+        // { Header: "Agent", accessor: "agentAssigned" },
+        // { Header: "Status", accessor: "leadStatus" },
+        // { Header: "Approval Status", accessor: "leadWhatsappNumber" },
+        { Header: "Nationality", accessor: "nationality" },
+        { Header: "Last Note", width: 100, accessor: "lastNote" },
+        { Header: "Intrest", accessor: "interest" },
+        currentState === "all_leads" && {
+          Header: "Action",
+          isSortable: false,
+          center: true,
+        },
+        currentState === "pending" && { Header: "Cancel" },
+      ]);
     }
 
-//     if(currentState == "all_leads"){
-//       setFilteredLeads(data)
+    //     if(currentState == "all_leads"){
+    //       setFilteredLeads(data)
 
-//       return;
-//     }
-//    const newFilteredLeads = data?.filter((row)=>{
-//       return approvals.find(approval=>approval.leadId == row?._id)
-      
-//    })
-//    console.log(newFilteredLeads , "Requested Lead")
-//    const leadApprovals = newFilteredLeads?.filter((lead)=>{
-//     const approval = approvals.find(approval=>lead?._id == approval?.leadId)
-//     return approval?.approvalStatus == currentState && (approval.managerId == user._id || approval.agentId == user._id)
-//  })
-//    setFilteredLeads(leadApprovals);
-  
+    //       return;
+    //     }
+    //    const newFilteredLeads = data?.filter((row)=>{
+    //       return approvals.find(approval=>approval.leadId == row?._id)
 
-   },[currentState])
+    //    })
+    //    console.log(newFilteredLeads , "Requested Lead")
+    //    const leadApprovals = newFilteredLeads?.filter((lead)=>{
+    //     const approval = approvals.find(approval=>lead?._id == approval?.leadId)
+    //     return approval?.approvalStatus == currentState && (approval.managerId == user._id || approval.agentId == user._id)
+    //  })
+    //    setFilteredLeads(leadApprovals);
+  }, [currentState]);
 
- 
-
-  
-useEffect(()=>{
-  setDynamicColumns(roleColumns[role] || tableColumns)
-  setSelectedColumns(roleColumns[role] || tableColumns)
-},[tableColumnsManager])
+  useEffect(() => {
+    setDynamicColumns(roleColumns[role] || tableColumns);
+    setSelectedColumns(roleColumns[role] || tableColumns);
+  }, [tableColumnsManager]);
 
   const dataColumn = dynamicColumns?.filter((item) =>
     selectedColumns?.find((colum) => colum?.Header === item.Header)
   );
 
-
   const fetchData = async (pageNo = 1, pageSize = 10) => {
-    if(user.role !== "superAdmin" && currentState === "all_leads"){
+    if (user.role !== "superAdmin" && currentState === "all_leads") {
       setIsLoding(true);
       let result = await getApi(
         // user.role === "superAdmin"
@@ -230,23 +224,23 @@ useEffect(()=>{
               "&page=" +
               pageNo +
               "&pageSize=" +
-              pageSize+"&isInLeadPool=true"
+              pageSize +
+              "&isInLeadPool=true"
           : `api/lead/?user=${user._id}&role=${
               user.roles[0]?.roleName
             }&dateTime=${
               dateTime?.from + "|" + dateTime?.to
             }&page=${pageNo}&pageSize=${pageSize}`
       );
-     const newData =  result.data?.result?.map((lead)=>{
-         if(lead?.ip){
-          const parts = lead?.ip.split('-');
-           
-      // Return only the IP part, which is the first element of the array
-        lead.ip = parts?.length>1?parts[1]:parts[0];
-        
-         }
-         return {...lead}
-      })
+      const newData = result.data?.result?.map((lead) => {
+        if (lead?.ip) {
+          const parts = lead?.ip.split("-");
+
+          // Return only the IP part, which is the first element of the array
+          lead.ip = parts?.length > 1 ? parts[1] : parts[0];
+        }
+        return { ...lead };
+      });
       setData(newData || []);
       setPages(result.data?.totalPages || 0);
       setTotalLeads(result.data?.totalLeads || 0);
@@ -255,45 +249,59 @@ useEffect(()=>{
     }
     setIsLoding(true);
     try {
-    //  const res = await getApi("api/adminApproval/get","")
-    console.log(user,"user")
-     const result = await axios.get(constant["baseUrl"]+"api/adminApproval/get",{
-      headers:{
-        Authorization:  (localStorage.getItem("token") || sessionStorage.getItem("token"))
-      },
-      params:{
-        approvalStatus:currentState==="all_leads"?"":currentState,
-        page:pageNo,
-        pageSize,
-        managerId:( user?.roles[0]?.roleName == "Manager")?user?._id:"",
-        agentId:( user?.roles[0]?.roleName == "Agent")?user?._id:""
-      }
-
-     })
-    //  setApprovals()
-    console.log(result.data?.approvals,"approvals")
-     setData(result.data?.approvals || []); 
-     setPages(result.data?.totalPages || 0); 
-     setTotalLeads(result.data?.totalApprovals || 0); 
-     setIsLoding(false);
+      //  const res = await getApi("api/adminApproval/get","")
+      console.log(user, "user");
+      const result = await axios.get(
+        constant["baseUrl"] + "api/adminApproval/get",
+        {
+          headers: {
+            Authorization:
+              localStorage.getItem("token") || sessionStorage.getItem("token"),
+          },
+          params: {
+            approvalStatus: currentState === "all_leads" ? "" : currentState,
+            page: pageNo,
+            pageSize,
+            managerId: user?.roles[0]?.roleName == "Manager" ? user?._id : "",
+            agentId: user?.roles[0]?.roleName == "Agent" ? user?._id : "",
+          },
+        }
+      );
+      //  setApprovals()
+      console.log(result.data?.approvals, "approvals");
+      setData([...result.data?.approvals] || []);
+      setPages(result.data?.totalPages || 0);
+      setTotalLeads(result.data?.totalApprovals || 0);
+      setIsLoding(false);
     } catch (error) {
-     console.log(error,"error")
+      console.log(error, "error");
     }
-    
   };
-  const fetchSearchedData = async (term="",pageNo = 1, pageSize = 10) => {
+  const fetchSearchedData = async (term = "", pageNo = 1, pageSize = 10) => {
     setIsLoding(true);
     let result = await getApi(
       user.role === "superAdmin"
-        ? "api/lead/search" + "?term=" +term + "&dateTime=" + dateTime?.from + "|" + dateTime?.to + "&page=" + pageNo + "&pageSize=" + pageSize
+        ? "api/lead/search" +
+            "?term=" +
+            term +
+            "&dateTime=" +
+            dateTime?.from +
+            "|" +
+            dateTime?.to +
+            "&page=" +
+            pageNo +
+            "&pageSize=" +
+            pageSize
         : `api/lead/search?term=${term}&user=${user._id}&role=${
             user.roles[0]?.roleName
-          }&dateTime=${dateTime?.from + "|" + dateTime?.to}&page=${pageNo}&pageSize=${pageSize}`
+          }&dateTime=${
+            dateTime?.from + "|" + dateTime?.to
+          }&page=${pageNo}&pageSize=${pageSize}`
     );
     setDisplaySearchData(true);
-    setSearchedData(result.data?.result || []); 
-    setPages(result.data?.totalPages || 0); 
-    setTotalLeads(result.data?.totalLeads || 0); 
+    setSearchedData(result.data?.result || []);
+    setPages(result.data?.totalPages || 0);
+    setTotalLeads(result.data?.totalLeads || 0);
     setIsLoding(false);
   };
   const autoAssign = async () => {
@@ -313,58 +321,73 @@ useEffect(()=>{
       toast.error("Something went wrong!");
     }
   };
-  const checkApproval = (id) =>{
+  const checkApproval = (id) => {
     // console.log("Approval Id", id)
     // console.log("Approvalsss...", approvals)
-    return approvals.find(approval=> { 
+    return approvals.find((approval) => {
       // console.log("Approval id ,,", approval?.leadId, id)
-      return approval?.leadId == id
-     }
-    );
-  }
+      return approval?.leadId == id;
+    });
+  };
 
   useEffect(() => {
     setColumns(tableColumns);
   }, [action]);
-console.log(dynamicColumns,"manager")
+  console.log(dynamicColumns, "manager");
   return (
-    <div >
-      <Button  onClick={()=> setCurrentState("all_leads") } sx={{
-        backgroundColor:currentState == "all_leads"&&"#B79045",
-        color:currentState == "all_leads"&&"white",
-        "_hover":{
-        backgroundColor:currentState == "all_leads"&&"#B79045",
-        }
-      }}> { user?.role !== "superAdmin" ? "All Leads" : "All Lead Requests" }</Button>
-      <Button  onClick={()=> setCurrentState("pending") } 
+    <div>
+      <Button
+        onClick={() => setCurrentState("all_leads")}
         sx={{
-          backgroundColor:currentState == "pending"&&"#B79045",
-        color:currentState == "pending"&&"white",
-        "_hover":{
-        backgroundColor:currentState == "pending"&&"#B79045",
-        }
-        }}>Pending</Button>
-          <Button onClick={()=> setCurrentState("Accepted")} 
-            sx={{
-              backgroundColor:currentState == "Accepted"&&"#B79045",
-        color:currentState == "Accepted"&&"white",
-        "_hover":{
-        backgroundColor:currentState == "Accepted"&&"#B79045",
-        }
-            }}>Approved  Leads</Button>
-          <Button onClick={()=> setCurrentState("Rejected")}
-            sx={{
-              backgroundColor:currentState == "Rejected"&&"#B79045",
-        color:currentState == "Rejected"&&"white",
-        "_hover":{
-        backgroundColor:currentState == "Rejected"&&"#B79045",
-        }
-            }}>Rejected Leads</Button>
+          backgroundColor: currentState == "all_leads" && "#B79045",
+          color: currentState == "all_leads" && "white",
+          _hover: {
+            backgroundColor: currentState == "all_leads" && "#B79045",
+          },
+        }}
+      >
+        {" "}
+        {user?.role !== "superAdmin" ? "All Leads" : "All Lead Requests"}
+      </Button>
+      <Button
+        onClick={() => setCurrentState("pending")}
+        sx={{
+          backgroundColor: currentState == "pending" && "#B79045",
+          color: currentState == "pending" && "white",
+          _hover: {
+            backgroundColor: currentState == "pending" && "#B79045",
+          },
+        }}
+      >
+        Pending
+      </Button>
+      <Button
+        onClick={() => setCurrentState("Accepted")}
+        sx={{
+          backgroundColor: currentState == "Accepted" && "#B79045",
+          color: currentState == "Accepted" && "white",
+          _hover: {
+            backgroundColor: currentState == "Accepted" && "#B79045",
+          },
+        }}
+      >
+        Approved Leads
+      </Button>
+      <Button
+        onClick={() => setCurrentState("Rejected")}
+        sx={{
+          backgroundColor: currentState == "Rejected" && "#B79045",
+          color: currentState == "Rejected" && "white",
+          _hover: {
+            backgroundColor: currentState == "Rejected" && "#B79045",
+          },
+        }}
+      >
+        Rejected Leads
+      </Button>
       <Grid templateColumns="repeat(6, 1fr)" mt={3} mb={3} gap={4}>
-      
-
         <GridItem colSpan={6}>
-        {role === "Manager" && 
+          {role === "Manager" && (
             <Flex justifyContent={"flex-end"} mb={4}>
               {/* <Button
                 onClick={autoAssign}
@@ -376,11 +399,10 @@ console.log(dynamicColumns,"manager")
                 {autoAssignLoading ? "Assigning.." : "Auto Assign"}
               </Button> */}
             </Flex>
-        }
-        
-          
+          )}
+
           <CheckTable
-           checkApproval = {checkApproval}
+            checkApproval={checkApproval}
             dateTime={dateTime}
             setDateTime={setDateTime}
             totalLeads={totalLeads}
@@ -412,12 +434,9 @@ console.log(dynamicColumns,"manager")
       </Grid>
     </div>
   );
-
 };
 
 export default Index;
-
-
 
 // const index = () => {
 //   return (

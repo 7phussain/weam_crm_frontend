@@ -56,7 +56,13 @@ import Card from "components/card/Card";
 import CountUpComponent from "components/countUpComponent/countUpComponent";
 import Pagination from "components/pagination/Pagination";
 import Spinner from "components/spinner/Spinner";
-import { FaCheck, FaHistory, FaSort, FaSortDown, FaSortUp } from "react-icons/fa";
+import {
+  FaCheck,
+  FaHistory,
+  FaSort,
+  FaSortDown,
+  FaSortUp,
+} from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getApi } from "services/api";
@@ -85,6 +91,7 @@ import { constant } from "constant";
 import AdvancedSearchModal from "./AdvancedSearchModal";
 import { getUserNameById } from "utils";
 import { IoMdClose } from "react-icons/io";
+import { deleteApi } from "services/api";
 export default function CheckTable(props) {
   const {
     tableData,
@@ -110,7 +117,7 @@ export default function CheckTable(props) {
     totalLeads,
     fetchSearchedData,
     setData,
-    checkApproval
+    checkApproval,
   } = props;
   const textColor = useColorModeValue("gray.500", "white");
   const borderColor = useColorModeValue("gray.200", "whiteAlpha.100");
@@ -123,7 +130,7 @@ export default function CheckTable(props) {
 
   const user = JSON.parse(localStorage.getItem("user"));
   const tree = useSelector((state) => state.user.tree);
-  const users = useSelector(state=>state.user?.users);
+  const users = useSelector((state) => state.user?.users);
 
   const [deleteModel, setDelete] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState(false);
@@ -151,12 +158,11 @@ export default function CheckTable(props) {
   const [manageColumns, setManageColumns] = useState(false);
   const [tempSelectedColumns, setTempSelectedColumns] = useState(dataColumn); // State to track changes
   const [taskInits, setTaskInits] = useState({});
-  const [userCoins,setUserCoins] = useState(0)
-  useEffect(()=>{
-    setTempSelectedColumns(dataColumn)
-  },[dataColumn])
-  console.log(dataColumn,"dataColumn")
- 
+  const [userCoins, setUserCoins] = useState(0);
+  useEffect(() => {
+    setTempSelectedColumns(dataColumn);
+  }, [dataColumn]);
+  console.log(dataColumn, "dataColumn");
 
   const csvColumns = [
     { Header: "Name", accessor: "leadName" },
@@ -187,6 +193,40 @@ export default function CheckTable(props) {
     }
   };
 
+  async function requestDeleteHandler(id, leadID, userId) {
+    console.log(id, leadID, userId, "details");
+    try {
+      const res = await axios.post(
+        constant["baseUrl"] + "api/adminApproval/delete",
+        {
+          id: id,
+        },
+        {
+          headers: {
+            Authorization:
+              localStorage.getItem("token") || sessionStorage.getItem("token"),
+          },
+        }
+      );
+      const lead = await getApi(`api/lead/view/${leadID}`);
+
+      const r = await getApi(`api/user/view/${userId}`);
+      const response = await putApi(`api/user/edit/${userId}`, {
+        ...r?.data,
+        coins:
+          lead?.data?.lead?.leadStatus == "new"
+            ? r?.data?.coins + 300
+            : r?.data?.coins + 150,
+      });
+
+      fetchData();
+      toast.success("Request is deleted successfuly");
+    } catch (error) {
+      console.log("an error occured");
+      toast.success("Unable to delete request");
+    }
+  }
+
   const handleColumnClear = () => {
     isColumnSelected = selectedColumns?.some(
       (selectedColumn) => selectedColumn?.accessor === column?.accessor
@@ -195,15 +235,14 @@ export default function CheckTable(props) {
     setManageColumns(!manageColumns ? !manageColumns : false);
   };
 
-  useEffect(()=>{
-    async function fetchUser(){
+  useEffect(() => {
+    async function fetchUser() {
+      const res = await getApi(`api/user/view/${user?._id}`);
 
-      const res = await getApi(`api/user/view/${user?._id}`)
-
-      setUserCoins(res?.data?.coins)
+      setUserCoins(res?.data?.coins);
     }
     fetchUser();
-  },[tableData])
+  }, [tableData]);
 
   const initialValues = {
     leadName: "",
@@ -232,7 +271,7 @@ export default function CheckTable(props) {
     initialValues: initialValues,
     validationSchema: validationSchema,
     onSubmit: (values, { resetForm }) => {
-      console.log(values?.managerAssigned,"manager Assigned")
+      console.log(values?.managerAssigned, "manager Assigned");
       setIsLoding(true);
       const searchResult = allData?.filter(
         (item) =>
@@ -275,8 +314,8 @@ export default function CheckTable(props) {
           (user) => user?._id?.toString() === values?.agentAssigned
         );
       }
-      if(values?.agentAssigned == -1){
-        agent ={ firstName:"No",lastName:" Agent"}
+      if (values?.agentAssigned == -1) {
+        agent = { firstName: "No", lastName: " Agent" };
       }
 
       let manager = null;
@@ -285,9 +324,9 @@ export default function CheckTable(props) {
           (user) => user?._id?.toString() === values?.managerAssigned
         );
       }
-      if(values?.managerAssigned == -1){
-        alert("it is called in manager")
-        manager = {firstName:"No",lastNamt:"Manager"}
+      if (values?.managerAssigned == -1) {
+        alert("it is called in manager");
+        manager = { firstName: "No", lastNamt: "Manager" };
       }
       let getValue = [
         values.leadName,
@@ -322,7 +361,7 @@ export default function CheckTable(props) {
     setUpdatedPage(0);
     fetchData(1, pageSize);
     setGopageValue(1);
-    setUpdatedPage(0); 
+    setUpdatedPage(0);
   };
 
   const {
@@ -454,87 +493,129 @@ export default function CheckTable(props) {
     }
   };
 
-  const approveChangeHandler = async(e,leadId,agentId,managerId,approvalId) =>{
-    const user = JSON.parse(localStorage.getItem('user'))
-    console.log(user?.role,"role")
-    if(e == "none") return;
-    try{
-     const res = await axios.put(constant["baseUrl"]+"api/adminApproval/update",{
-      isApproved:e == "accept"?true:false,
-      objectId:approvalId,
-      // isManager:
-     },{
-      headers:{
-        Authorization:  (localStorage.getItem("token") || sessionStorage.getItem("token"))
-      }
-     })
+  const approveChangeHandler = async (
+    e,
+    leadId,
+    agentId,
+    managerId,
+    approvalId
+  ) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    console.log(user?.role, "role");
+    console.log(e, leadId, agentId, managerId, approvalId, "it an information");
+    if (e == "none") return;
+    try {
+      const res = await axios.put(
+        constant["baseUrl"] + "api/adminApproval/update",
+        {
+          isApproved: e == "accept" ? true : false,
+          objectId: approvalId,
+          // isManager:
+        },
+        {
+          headers: {
+            Authorization:
+              localStorage.getItem("token") || sessionStorage.getItem("token"),
+          },
+        }
+      );
 
-     if(res?.data?.status){
-      if(agentId?false:true){
-        try {
-          // setLoading(true);
-          const dataObj = {
-            managerAssigned:managerId ,
-          }; 
-    
-          if (e === "") {
-            dataObj["agentAssigned"] = "";
+      if (res?.data?.status) {
+        if (agentId ? false : true) {
+          try {
+            // setLoading(true);
+            const dataObj = {
+              managerAssigned: managerId,
+            };
+
+            if (e === "") {
+              dataObj["agentAssigned"] = "";
+            }
+
+            await putApi(`api/lead/edit/${leadId}`, dataObj);
+
+            fetchData();
+            toast.success("Manager updated successfuly");
+            // setManagerSelected(dataObj.managerAssigned || "");
+            // setData(prevData => {
+            //   const newData = [...prevData];
+
+            //   const updateIdx = newData.findIndex((l) => l._id.toString() === leadID);
+            //   if(updateIdx !== -1) {
+            //     newData[updateIdx].managerAssigned = dataObj.managerAssigned;
+            //     newData[updateIdx].agentAssigned = "";
+            //   }
+            //   return newData;
+            // })
+          } catch (error) {
+            console.log(error);
+            toast.error("Failed to update the manager");
           }
-    
-          await putApi(`api/lead/edit/${leadId}`, dataObj);
-          const r = await getApi(`api/user/view/${managerId}`)
-          const res = await putApi(`api/user/edit/${managerId}`,{
-            ...r?.data,coins:(allData?.find(lead=>lead?._id == leadId)?.leadStatus == "new")?r?.data?.coins-300:r?.data?.coins-150
-          })
-          fetchData();
-          toast.success("Manager updated successfuly");
-          // setManagerSelected(dataObj.managerAssigned || "");
-          // setData(prevData => {
-          //   const newData = [...prevData]; 
-    
-          //   const updateIdx = newData.findIndex((l) => l._id.toString() === leadID); 
-          //   if(updateIdx !== -1) {
-          //     newData[updateIdx].managerAssigned = dataObj.managerAssigned; 
-          //     newData[updateIdx].agentAssigned = ""; 
-          //   }
-          //   return newData; 
-          // })
-        } catch (error) {
-          console.log(error);
-          toast.error("Failed to update the manager");
+        } else {
+          try {
+            const data = {
+              agentAssigned: agentId,
+            };
+
+            // setLoading(true);
+
+            await putApi(`api/lead/edit/${leadId}`, data);
+            // if()
+            // const r = await getApi(`api/user/view/${agentId}`);
+            // const res = await putApi(`api/user/edit/${agentId}`, {
+            //   ...r?.data,
+            //   coins:
+            //     allData?.find((lead) => lead?._id == leadId)?.leadStatus ==
+            //     "new"
+            //       ? r?.data?.coins - 300
+            //       : r?.data?.coins - 150,
+            // });
+            toast.success("Agent updated successfuly");
+            fetchData();
+
+            // fetchData();
+          } catch (error) {
+            console.log(error);
+            toast.error("Failed to update the agent");
+          }
         }
-      }else{
+      } else {
         try {
-          const data = {
-            agentAssigned: agentId,
-          };
-    
-          // setLoading(true); 
-    
-          await putApi(`api/lead/edit/${leadId}`, data);
-          const r = await getApi(`api/user/view/${agentId}`)
-          const res = await putApi(`api/user/edit/${agentId}`,{
-            ...r?.data,coins:(allData?.find(lead=>lead?._id == leadId)?.leadStatus == "new")?r?.data?.coins-300:r?.data?.coins-150
-          })
-          toast.success("Agent updated successfuly");
+          if (agentId ? true : false) {
+            // alert(agentId);
+            const lead = await getApi(`api/lead/view/${leadId}`);
+            const r = await getApi(`api/user/view/${agentId}`);
+            const res = await putApi(`api/user/edit/${agentId}`, {
+              ...r?.data,
+              coins:
+                lead?.data?.lead?.leadStatus == "new"
+                  ? r?.data?.coins + 300
+                  : r?.data?.coins + 150,
+            });
+          } else {
+            // alert(managerId);
+            const lead = await getApi(`api/lead/view/${leadId}`);
+            const r = await getApi(`api/user/view/${managerId}`);
+            const res = await putApi(`api/user/edit/${managerId}`, {
+              ...r?.data,
+              coins:
+                lead?.data?.lead?.leadStatus == "new"
+                  ? r?.data?.coins + 300
+                  : r?.data?.coins + 150,
+            });
+          }
+          toast.success("Request Rejected successfuly");
           fetchData();
-          
-          // fetchData();
         } catch (error) {
           console.log(error);
-          toast.error("Failed to update the agent");
         }
       }
-       
-    
-  
-     }
 
-     console.log(res,"response from update of lead request")
-    }catch(error){
-      console.log("error",error)
+      console.log(res, "response from update of lead request");
+    } catch (error) {
+      console.log("error", error);
     }
-  }
+  };
 
   const convertJsonToCsvOrExcel = (
     jsonArray,
@@ -557,28 +638,28 @@ export default function CheckTable(props) {
   };
 
   const fetchSearch = () => {
-    if(searchbox.current?.value?.trim()) {
-      fetchSearchedData(searchbox.current?.value?.trim(), 1, pageSize); 
-      setUpdatedPage(0); 
-      setGopageValue(1); 
+    if (searchbox.current?.value?.trim()) {
+      fetchSearchedData(searchbox.current?.value?.trim(), 1, pageSize);
+      setUpdatedPage(0);
+      setGopageValue(1);
     }
-  }
+  };
 
   useEffect(() => {
-    setGopageValue(1); 
-    setUpdatedPage(0); 
-    if(displaySearchData) {
-      fetchSearchedData(searchbox.current?.value?.trim()); 
+    setGopageValue(1);
+    setUpdatedPage(0);
+    if (displaySearchData) {
+      fetchSearchedData(searchbox.current?.value?.trim());
     } else {
-      fetchData(); 
+      fetchData();
     }
-
   }, [action]);
 
   useEffect(() => {
-    setGopageValue(1); 
-    setUpdatedPage(0); 
-    if (fetchData && (dateTime.from || dateTime.to) && !displaySearchData) fetchData();
+    setGopageValue(1);
+    setUpdatedPage(0);
+    if (fetchData && (dateTime.from || dateTime.to) && !displaySearchData)
+      fetchData();
   }, [dateTime]);
 
   useEffect(() => {
@@ -596,7 +677,7 @@ export default function CheckTable(props) {
 
   useEffect(() => {
     setUpdatedPage(0);
-    setGopageValue(1); 
+    setGopageValue(1);
     if (displaySearchData) {
       fetchSearchedData(searchbox.current?.value?.trim() || "", 1, pageSize);
     } else {
@@ -604,37 +685,49 @@ export default function CheckTable(props) {
     }
   }, [pageSize]);
 
-
   const sendRequest = async (leadID) => {
-    const user = JSON.parse(localStorage.getItem('user'))
+    const user = JSON.parse(localStorage.getItem("user"));
     // if(user._id == e.target.value){
-      // alert("The manager is wroking")
+    // alert("The manager is wroking")
     //  const res= await postApi("api/adminApproval/add", {leadId: leadID, managerId: e.target.value,},true);
     //    console.log(res.data)
-let  payload = {
-  leadId:leadID,
-}
+    let payload = {
+      leadId: leadID,
+    };
 
-if(user?.roles[0]?.roleName =="Agent"){
-  payload.agentId = user?._id
-}else if(user?.roles[0]?.roleName =="Manager"){
-  payload.managerId = user?._id
-}
-
-
-    try{
-      const res = await axios.post(constant["baseUrl"]+"api/adminApproval/add",payload,{
-        headers:{
-          Authorization:  (localStorage.getItem("token") || sessionStorage.getItem("token"))
-        }
-      })
-      console.log(res.data)
-      fetchData()
-
-    }catch(error){
-      console.log(error,"error")
+    if (user?.roles[0]?.roleName == "Agent") {
+      payload.agentId = user?._id;
+    } else if (user?.roles[0]?.roleName == "Manager") {
+      payload.managerId = user?._id;
     }
-    // } 
+
+    try {
+      const res = await axios.post(
+        constant["baseUrl"] + "api/adminApproval/add",
+        payload,
+        {
+          headers: {
+            Authorization:
+              localStorage.getItem("token") || sessionStorage.getItem("token"),
+          },
+        }
+      );
+      console.log(res.data);
+
+      const r = await getApi(`api/user/view/${user?._id}`);
+      const response = await putApi(`api/user/edit/${user?._id}`, {
+        ...r?.data,
+        coins:
+          allData?.find((lead) => lead?._id == leadID)?.leadStatus == "new"
+            ? r?.data?.coins - 300
+            : r?.data?.coins - 150,
+      });
+
+      fetchData();
+    } catch (error) {
+      console.log(error, "error");
+    }
+    // }
   };
 
   return (
@@ -704,22 +797,20 @@ if(user?.roles[0]?.roleName =="Agent"){
         overflowX={{ sm: "scroll", lg: "hidden" }}
       >
         <Grid templateColumns="repeat(12, 1fr)" gap={2}>
-            <GridItem             colSpan={{ base: 8 }}
+          <GridItem
+            colSpan={{ base: 8 }}
             display={"flex"}
-            alignItems={"center"}>
-              <Text
-                color={useColorModeValue("secondaryGray.900", "white")}
-                fontSize="22px"
-                fontWeight="700"
-              >
-                Leads (
-                <CountUpComponent
-                  key={data?.length}
-                  targetNumber={totalLeads}
-                />
-                )
-              </Text>
-            </GridItem>
+            alignItems={"center"}
+          >
+            <Text
+              color={useColorModeValue("secondaryGray.900", "white")}
+              fontSize="22px"
+              fontWeight="700"
+            >
+              Leads (
+              <CountUpComponent key={data?.length} targetNumber={totalLeads} />)
+            </Text>
+          </GridItem>
           {/* <GridItem
             colSpan={{ base: 8 }}
             display={"flex"}
@@ -1050,36 +1141,38 @@ if(user?.roles[0]?.roleName =="Agent"){
                             </Flex>
                           );
                         } else if (cell?.column.Header === "Name") {
-                          data = (access?.view && row?.original?.ApprovalStatus == "Accepted") ? (
-                            <Link to={`/leadView/${row?.original?.leadId}`}>
+                          data =
+                            access?.view &&
+                            row?.original?.ApprovalStatus == "Accepted" ? (
+                              <Link to={`/leadView/${row?.original?.leadId}`}>
+                                <Text
+                                  me="10px"
+                                  sx={{
+                                    "&:hover": {
+                                      color: "blue.500",
+                                      textDecoration: "underline",
+                                    },
+                                  }}
+                                  color="brand.600"
+                                  fontSize="sm"
+                                  // fontWeight="500"
+                                  pl="24px"
+                                  fontWeight="700"
+                                >
+                                  {cell?.value?.text || cell?.value}
+                                </Text>
+                              </Link>
+                            ) : (
                               <Text
                                 me="10px"
-                                sx={{
-                                  "&:hover": {
-                                    color: "blue.500",
-                                    textDecoration: "underline",
-                                  },
-                                }}
-                                color="brand.600"
                                 fontSize="sm"
                                 // fontWeight="500"
-                                pl="24px"
                                 fontWeight="700"
+                                pl="19px"
                               >
                                 {cell?.value?.text || cell?.value}
                               </Text>
-                            </Link>
-                          ) : (
-                            <Text
-                              me="10px"
-                              fontSize="sm"
-                              // fontWeight="500"
-                              fontWeight="700"
-                              pl="19px"
-                            >
-                              {cell?.value?.text || cell?.value}
-                            </Text>
-                          );
+                            );
                         } else if (cell?.column.Header === "Whatsapp Number") {
                           data = (
                             <Text
@@ -1144,8 +1237,8 @@ if(user?.roles[0]?.roleName =="Agent"){
                               />
                             </div>
                           );
-                        } else if (cell?.column.Header === "Lead Approval"){
-                          data = (
+                        } else if (cell?.column.Header === "Lead Approval") {
+                          data =
                             // <div className="selectOpt">
                             //   <ApprovalStatus
                             //     setUpdatedStatuses={setUpdatedStatuses}
@@ -1153,37 +1246,66 @@ if(user?.roles[0]?.roleName =="Agent"){
                             //     cellValue={cell?.value}
                             //   />
                             // </div>
-                            row?.original?.approvalStatus != "pending"?row?.original?.approvalStatus :
-                            <div style={{
-                              display:"flex",
-                              gap:"10px",
-                              paddingLeft:"19px"
-                            }}>
-                              <Button
-                              onClick={()=>approveChangeHandler("accept",row?.original?.leadId?.toString(),row?.original?.agentId,row?.original?.managerId,row?.original?._id)}
-                               sx={{
-                                padding:"5px",
-                                borderRadius:"50%",
-                                cursor:"pointer",
-                                "hover":{
-                                  backgroundColor:'blue',
-                                  color:"white"
-                                }
-
-                              }}><FaCheck size={18}/></Button>
-                              <Button 
-                              onClick={()=>approveChangeHandler("reject",row?.original?.leadId?.toString(),row?.original?.agentId,row?.original?.managerId,row?.original?._id)}
-                               sx={{
-                                padding:"5px",
-                                borderRadius:"50%",
-                                cursor:"pointer",
-                                "hover":{
-                                  backgroundColor:'red',
-                                  color:"white"
-                                }
-                                
-                              }}><IoMdClose size={18}/></Button>
-                            </div>
+                            row?.original?.approvalStatus != "pending" ? (
+                              row?.original?.approvalStatus
+                            ) : (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  gap: "10px",
+                                  paddingLeft: "19px",
+                                }}
+                              >
+                                <Button
+                                  onClick={() =>
+                                    approveChangeHandler(
+                                      "accept",
+                                      row?.original?.leadId?.toString(),
+                                      row?.original?.agentId,
+                                      row?.original?.managerId,
+                                      row?.original?._id
+                                    )
+                                  }
+                                  sx={{
+                                    padding: "5px",
+                                    borderRadius: "50%",
+                                    cursor: "pointer",
+                                    hover: {
+                                      backgroundColor: "blue",
+                                      color: "white",
+                                    },
+                                  }}
+                                >
+                                  <FaCheck size={18} />
+                                </Button>
+                                <Button
+                                  onClick={() => {
+                                    approveChangeHandler(
+                                      "reject",
+                                      row?.original?.leadId?.toString(),
+                                      row?.original?.agentId,
+                                      row?.original?.managerId,
+                                      row?.original?._id
+                                    );
+                                    console.log(
+                                      row?.original,
+                                      "it is an object"
+                                    );
+                                  }}
+                                  sx={{
+                                    padding: "5px",
+                                    borderRadius: "50%",
+                                    cursor: "pointer",
+                                    hover: {
+                                      backgroundColor: "red",
+                                      color: "white",
+                                    },
+                                  }}
+                                >
+                                  <IoMdClose size={18} />
+                                </Button>
+                              </div>
+                            );
                           //   <Select
                           //   defaultValue={"None"}
                           //   // className={changeStatus(value)}
@@ -1196,17 +1318,14 @@ if(user?.roles[0]?.roleName =="Agent"){
                           //   <option value="accept">Accept</option>
                           //   <option value="reject">Reject</option>
                           //         </Select>
-                          );
-                        }  else if(cell?.column.Header === "Approval Status"){
-                            data=(
-                              <h1 style={{textAlign:"center"}}>
-                                { 
-                                row?.original?.approvalStatus
-                            }
-                              </h1>
-                            )
-                        } else if (cell?.column.Header === "Manager") {
+                        } else if (cell?.column.Header === "Approval Status") {
                           data = (
+                            <h1 style={{ textAlign: "center" }}>
+                              {row?.original?.approvalStatus}
+                            </h1>
+                          );
+                        } else if (cell?.column.Header === "Manager") {
+                          data =
                             // <RenderManager
                             //   fetchData={fetchData}
                             //   pageIndex={pageIndex}
@@ -1215,15 +1334,20 @@ if(user?.roles[0]?.roleName =="Agent"){
                             //   value={cell?.value}
                             //   checkApproval={checkApproval}
                             // />
-                            getUserNameById(row?.original?.managerId,users)
+                            getUserNameById(row?.original?.managerId, users);
+                        } else if (
+                          cell?.column.Header === "Requested By Agent"
+                        ) {
+                          console.log(
+                            row?.original?.agentId,
+                            row?.original?.leadName,
+                            "agent assigned "
                           );
-                        } else if (cell?.column.Header === "Agent") {
-                          console.log(row?.original?.agentId,row?.original?.leadName,"agent assigned ")
-                          data = (
+                          data =
                             // <>
                             //   <RenderAgent
                             //   checkApproval={checkApproval}
-                                
+
                             //     setData={setData}
                             //     fetchData={fetchData}
                             //     leadID={row?.original?._id?.toString()}
@@ -1231,8 +1355,7 @@ if(user?.roles[0]?.roleName =="Agent"){
                             //     value={cell?.value}
                             //   />
                             // </>
-                            getUserNameById(row?.original?.agentId,users)
-                          );
+                            getUserNameById(row?.original?.agentId, users);
                         } else if (cell?.column.Header === "Nationality") {
                           data = (
                             <Text
@@ -1275,7 +1398,9 @@ if(user?.roles[0]?.roleName =="Agent"){
                               fontWeight="900"
                               textAlign={"center"}
                             >
-                              {new Date(cell?.value?.text || cell?.value).toLocaleString() || "-"}
+                              {new Date(
+                                cell?.value?.text || cell?.value
+                              ).toLocaleString() || "-"}
                             </Text>
                           );
                         } else if (cell?.column.Header === "Action") {
@@ -1305,7 +1430,7 @@ if(user?.roles[0]?.roleName =="Agent"){
                             //           Edit
                             //         </MenuItem>
                             //       )}
-                                  
+
                             //       {access?.delete && (
                             //         <MenuItem
                             //           py={2.5}
@@ -1329,24 +1454,59 @@ if(user?.roles[0]?.roleName =="Agent"){
                               fontWeight="900"
                               textAlign={"center"}
                             >
-                            {(row?.original?.agentAssigned || row?.original?.managerAssigned) ?
+                              {row?.original?.agentAssigned ||
+                              row?.original?.managerAssigned ? (
+                                <Button
+                                  colorScheme="red"
+                                  // variant="filled"
+                                  size="sm"
+                                  disabled
+                                >
+                                  Sold Out
+                                </Button>
+                              ) : (
+                                <Button
+                                  colorScheme="brand"
+                                  // variant="filled"
+                                  size="sm"
+                                  onClick={() =>
+                                    sendRequest(row?.original?._id)
+                                  }
+                                  disabled={
+                                    row?.original?.leadStatus == "new" ||
+                                    row?.original?.leadStatus == ""
+                                      ? userCoins < 300
+                                      : userCoins < 150
+                                  }
+                                >
+                                  Buy
+                                </Button>
+                              )}
+                            </Text>
+                          );
+                        } else if (cell?.column.Header === "Cancel") {
+                          data = (
                             <Button
-                             colorScheme="red"
-                            // variant="filled"
-                            size="sm" disabled>
-                            Sold Out
-                            </Button>:
-                            <Button 
-                            colorScheme="brand"
-                            // variant="filled"
-                            size="sm"
-                            onClick={()=>sendRequest(row?.original?._id)}
-                            disabled={row?.original?.leadStatus == "new" || row?.original?.leadStatus == ""?userCoins<300:userCoins<150}
+                              onClick={() =>
+                                requestDeleteHandler(
+                                  row?.original?._id,
+                                  row?.original?.leadId,
+                                  row?.original?.agentId ||
+                                    row?.original?.managerId
+                                )
+                              }
+                              sx={{
+                                padding: "5px",
+                                borderRadius: "50%",
+                                cursor: "pointer",
+                                hover: {
+                                  backgroundColor: "red",
+                                  color: "white",
+                                },
+                              }}
                             >
-                            Buy
-                            </Button>}
-                           </Text>
-                           
+                              <IoMdClose size={18} />
+                            </Button>
                           );
                         }
                         return (
@@ -1358,7 +1518,7 @@ if(user?.roles[0]?.roleName =="Agent"){
                             {...cell?.getCellProps()}
                             key={index}
                             style={
-                              cell?.column?.Header === "Manager"
+                              cell?.column?.Header === "Requested By Manager"
                                 ? { padding: "0 5px 0 0" }
                                 : cell?.column?.Header === "Agent"
                                 ? { padding: 0 }
