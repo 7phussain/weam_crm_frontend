@@ -1324,7 +1324,9 @@ export default function CheckTable(props) {
                               {row?.original?.approvalStatus}
                             </h1>
                           );
-                        } else if (cell?.column.Header === "Manager") {
+                        } else if (
+                          cell?.column.Header === "Requested By Manager"
+                        ) {
                           data =
                             // <RenderManager
                             //   fetchData={fetchData}
